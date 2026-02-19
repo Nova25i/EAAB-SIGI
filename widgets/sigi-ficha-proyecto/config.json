@@ -1,0 +1,16 @@
+{
+  "logoUrl": "images/SIGI_Logo.png",
+  "CapaMacroProyectos": "",
+  "CampoImagenMacroproyecto": "",
+  "CapaProyectosLocalidad": "",
+  "TablaElementosPEP": "",
+  "TablaPoblacional": "",
+  "CapaDeProyectos": "",
+  "ColumnaLocalidad": "",
+  "LogoUrlMacroproyecto": "//www.acueducto.com.co/wassigue2/IMAGWEBS/SIGI_ICON/macroProyecto.png",
+  "LogoUrlProyectos": "//www.acueducto.com.co/wassigue2/IMAGWEBS/SIGI_ICON/macroProyecto.png",
+  "CampoImagenElementoPep": "",
+  "TemplateImagen": "//www.acueducto.com.co/wassigue2/IMAGWEBS/SIGIMG/{0}.png",
+  "TemplateImagenMacroproyecto": "//www.acueducto.com.co/wassigue2/IMAGWEBS/SIGIMG/MP/{0}.png",
+  "TemplateImagenProyectosLocalidad": "//www.acueducto.com.co/wassigue2/IMAGWEBS/SIGIMG/LOC/{0}.png"
+}

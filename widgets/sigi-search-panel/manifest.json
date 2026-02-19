@@ -1,0 +1,24 @@
+{
+  "name": "sigi-search-panel",
+  "label": "SIGI Panel de Búsqueda",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.19.0",
+  "author": "EAAB",
+  "description": "Panel de búsqueda de proyectos SIGI con filtros por PDD, Estado, Localidad y búsqueda geográfica",
+  "copyright": "EAAB - Empresa de Acueducto y Alcantarillado de Bogotá",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "properties": {
+    "hasConfig": true,
+    "hasSettingPage": true
+  },
+  "translatedLocales": [
+    "es"
+  ],
+  "defaultLocale": "es",
+  "dependency": ["jimu-arcgis"],
+  "defaultSize": {
+    "width": 360,
+    "height": "100%"
+  }
+}

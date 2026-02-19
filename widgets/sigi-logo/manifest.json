@@ -1,0 +1,22 @@
+{
+  "name": "sigi-logo",
+  "label": "SIGI Logo EAAB",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.19.0",
+  "author": "EAAB - Migración Experience Builder",
+  "description": "Logo circular de EAAB con efecto hover. Migrado desde LogoAcueducto de Web AppBuilder.",
+  "copyright": "© 2024 Empresa de Acueducto y Alcantarillado de Bogotá",
+  "license": "http://www.esri.com/legal/software-license",
+  "properties": {
+    "hasConfig": true,
+    "hasVersionManager": false,
+    "isDependent": false,
+    "hasSettingPage": true
+  },
+  "defaultSize": {
+    "width": 64,
+    "height": 64
+  },
+  "translatedLocales": ["es"]
+}

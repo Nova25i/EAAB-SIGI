@@ -1,0 +1,6 @@
+{
+  "eaabGeocoderUrl": "https://www.acueducto.com.co/servergis/rest/services/Localizador/LocalizadorEAAB/GeocodeServer",
+  "buttonColor": "#0083DB",
+  "hoverColor": "#139BF5",
+  "searchPlaceholder": "Buscar dirección, lugar o proyecto..."
+}

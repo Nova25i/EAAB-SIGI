@@ -1,0 +1,46 @@
+# Ignorar carpeta específica del proyecto EAAB
+eaab-sigipruebas-main/
+
+# Dependencias de Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Archivos de sistema
+Thumbs.db
+Desktop.ini
+.AppleDouble
+.LSOverride
+
+# Archivos de build
+dist/
+build/
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+.cache/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de prueba
+coverage/
+*.test.js.map
+
+# Archivos de configuración local
+config.local.json

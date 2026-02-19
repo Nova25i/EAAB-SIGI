@@ -1,0 +1,23 @@
+{
+  "name": "sigi-header",
+  "label": "SIGI Header Bar",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.19.0",
+  "author": "EAAB - Migración Experience Builder",
+  "description": "Barra superior con búsqueda y botones de navegación (Zoom, Home, Mi Ubicación). Migrado desde widgets Search, ZoomIn/Out, HomeButton, MyLocation de Web AppBuilder.",
+  "copyright": "© 2024 Empresa de Acueducto y Alcantarillado de Bogotá",
+  "license": "http://www.esri.com/legal/software-license",
+  "properties": {
+    "hasConfig": true,
+    "hasVersionManager": false,
+    "isDependent": false,
+    "hasSettingPage": true
+  },
+  "dependency": ["jimu-arcgis"],
+  "defaultSize": {
+    "width": 500,
+    "height": 50
+  },
+  "translatedLocales": ["es"]
+}

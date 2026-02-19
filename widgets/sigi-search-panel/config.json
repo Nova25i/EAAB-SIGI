@@ -1,0 +1,37 @@
+{
+  "proyectosLayerUrl": "https://www.acueducto.com.co/servergis/rest/services/SIGI/SIGI/FeatureServer/0",
+  "localidadesLayerUrl": "https://www.acueducto.com.co/servergis/rest/services/SIGI/SIGI/FeatureServer/1",
+  "webMapId": "f4eccdc1647b438db6b64462a80ff2b3",
+  "bufferRadiusKm": 3,
+  "primaryColor": "#0083DB",
+  "hoverColor": "#139BF5",
+  "pddOptions": [
+    {
+      "value": "BMPT",
+      "label": "BMPT",
+      "description": "Bogotá Mejor Para Todos",
+      "dateRange": "2016-2020"
+    },
+    {
+      "value": "NCSA",
+      "label": "NCSA",
+      "description": "Un nuevo contrato social y ambiental para la Bogotá del siglo XXI",
+      "dateRange": "2020-2024"
+    },
+    {
+      "value": "BCS",
+      "label": "BCS",
+      "description": "Bogotá Camina Segura",
+      "dateRange": "2024-2028"
+    }
+  ],
+  "estadoOptions": [
+    { "value": "Suscrito Legalizado", "label": "Suscrito Legalizado" },
+    { "value": "En Ejecución", "label": "En Ejecución" },
+    { "value": "Suspendido", "label": "Suspendido" },
+    { "value": "Proceso Jurídico", "label": "Proceso Jurídico" },
+    { "value": "Terminado", "label": "Terminado" },
+    { "value": "Liquidado", "label": "Liquidado" },
+    { "value": "N/A", "label": "Otros Costos" }
+  ]
+}

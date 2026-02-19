@@ -1,0 +1,23 @@
+{
+  "name": "sigi-toolbar",
+  "label": "SIGI Toolbar",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.19.0",
+  "author": "EAAB - Migración Experience Builder",
+  "description": "Barra de herramientas lateral izquierda del visor SIGI. Incluye herramientas de medición, mapas base, capas, dibujo y compartir.",
+  "copyright": "© 2024 Empresa de Acueducto y Alcantarillado de Bogotá",
+  "license": "http://www.esri.com/legal/software-license",
+  "properties": {
+    "hasConfig": true,
+    "hasVersionManager": false,
+    "isDependent": false,
+    "hasSettingPage": true
+  },
+  "dependency": ["jimu-arcgis"],
+  "defaultSize": {
+    "width": 56,
+    "height": 280
+  },
+  "translatedLocales": ["es"]
+}

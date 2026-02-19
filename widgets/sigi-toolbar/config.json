@@ -1,0 +1,9 @@
+{
+  "showMeasure": true,
+  "showBasemap": true,
+  "showLayers": true,
+  "showDraw": true,
+  "showShare": true,
+  "buttonColor": "#0083DB",
+  "hoverColor": "#139BF5"
+}

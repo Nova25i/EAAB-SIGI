@@ -90,7 +90,6 @@ const widgetStyles = css`
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     position: relative;
-    z-index: 1;
   }
 
   .search-section {
@@ -349,7 +348,6 @@ const widgetStyles = css`
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10;
   }
 
   .localidad-select {
@@ -430,7 +428,6 @@ const widgetStyles = css`
     border-top: none;
     max-height: 200px;
     overflow-y: auto;
-    z-index: 50;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
 
@@ -1518,9 +1515,8 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     } = this.state;
 
     return (
-      <div css={widgetStyles}>
-        <div className="sigi-search-panel">
-          {/* Map View Component */}
+      <div css={widgetStyles} className="jimu-widget sigi-search-panel-widget">
+        <div className="sigi-search-panel">{/* Map View Component */}
           {useMapWidgetIds && useMapWidgetIds.length > 0 && (
             <JimuMapViewComponent
               useMapWidgetId={useMapWidgetIds[0]}

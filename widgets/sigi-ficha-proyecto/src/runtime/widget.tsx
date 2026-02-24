@@ -125,7 +125,7 @@ const widgetStyles = css`
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    z-index: 999999 !important;
+    z-index: 2147483647 !important;
     overflow-y: auto;
     padding: 10px;
     isolation: isolate;
@@ -139,7 +139,7 @@ const widgetStyles = css`
     margin-top: 10px;
     margin-bottom: 10px;
     position: relative !important;
-    z-index: 1000000 !important;
+    z-index: 2147483647 !important;
     isolation: isolate;
     transform: translate3d(0, 0, 0);
   }
@@ -575,6 +575,20 @@ const widgetStyles = css`
   }
 `;
 
+// Importar imágenes locales usando require
+const imgFase1On = require('../../images/Fase1On.png');
+const imgFase1Off = require('../../images/Fase1Off.png');
+const imgFase2On = require('../../images/Fase2On.png');
+const imgFase2Off = require('../../images/Fase2Off.png');
+const imgFase3On = require('../../images/Fase3On.png');
+const imgFase3Off = require('../../images/Fase3Off.png');
+const imgIndicadorOn = require('../../images/IndicadorOn.png');
+const imgIndicadorOff = require('../../images/IndicadorOff.png');
+const imgOtrosCostosOn = require('../../images/OtrosCostosOn.png');
+const imgOtrosCostosOff = require('../../images/OtrosCostosOff.png');
+const imgOtrosCostos1On = require('../../images/OtrosCostos1On.png');
+const imgOtrosCostos1Off = require('../../images/OtrosCostos1Off.png');
+
 export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProps<IMConfig>, WidgetState> {
   private clickHandler: __esri.Handle | null = null;
   private eventHandler: ((event: CustomEvent) => void) | null = null;
@@ -596,6 +610,25 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     };
     console.log('🔷 SIGI FICHA - STATE INITIALIZED');
   }
+
+  // Helper method to get image references
+  getImageUrl = (imageName: string): string => {
+    const imageMap: { [key: string]: string } = {
+      'Fase1On.png': imgFase1On,
+      'Fase1Off.png': imgFase1Off,
+      'Fase2On.png': imgFase2On,
+      'Fase2Off.png': imgFase2Off,
+      'Fase3On.png': imgFase3On,
+      'Fase3Off.png': imgFase3Off,
+      'IndicadorOn.png': imgIndicadorOn,
+      'IndicadorOff.png': imgIndicadorOff,
+      'OtrosCostosOn.png': imgOtrosCostosOn,
+      'OtrosCostosOff.png': imgOtrosCostosOff,
+      'OtrosCostos1On.png': imgOtrosCostos1On,
+      'OtrosCostos1Off.png': imgOtrosCostos1Off
+    };
+    return imageMap[imageName] || '';
+  };
 
   componentDidMount(): void {
     console.log('🔷🔷🔷 SIGI FICHA PROYECTO - COMPONENT DID MOUNT 🔷🔷🔷');
@@ -1068,10 +1101,10 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     const isFase3 = fase.toUpperCase() === 'FASE 3';
     const hasOtrosCostos = !!projectData.OTROS_COSTOS;
 
-    const imgFase1 = isFase1 ? 'widgets/sigi-ficha-proyecto/images/Fase1On.png' : 'widgets/sigi-ficha-proyecto/images/Fase1Off.png';
-    const imgFase2 = isFase2 ? 'widgets/sigi-ficha-proyecto/images/Fase2On.png' : 'widgets/sigi-ficha-proyecto/images/Fase2Off.png';
-    const imgFase3 = isFase3 ? 'widgets/sigi-ficha-proyecto/images/Fase3On.png' : 'widgets/sigi-ficha-proyecto/images/Fase3Off.png';
-    const imgOtrosCostos = hasOtrosCostos ? 'widgets/sigi-ficha-proyecto/images/OtrosCostosOn.png' : 'widgets/sigi-ficha-proyecto/images/OtrosCostosOff.png';
+    const imgFase1 = isFase1 ? this.getImageUrl('Fase1On.png') : this.getImageUrl('Fase1Off.png');
+    const imgFase2 = isFase2 ? this.getImageUrl('Fase2On.png') : this.getImageUrl('Fase2Off.png');
+    const imgFase3 = isFase3 ? this.getImageUrl('Fase3On.png') : this.getImageUrl('Fase3Off.png');
+    const imgOtrosCostos = hasOtrosCostos ? this.getImageUrl('OtrosCostosOn.png') : this.getImageUrl('OtrosCostosOff.png');
 
     return (
       <div className="detail-tab-container descripcion">
@@ -1133,7 +1166,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                   <img src={imgFase1} height="80px" alt="Fase 1" />
                 </div>
                 <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
-                  <img src="widgets/sigi-ficha-proyecto/images/IndicadorOff.png" height="15px" style={{ marginTop: '30px' }} alt="" />
+                  <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
                 </div>
                 <div 
                   className="inversion-descripcion-icon" 
@@ -1143,7 +1176,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                   <img src={imgFase2} height="80px" alt="Fase 2" />
                 </div>
                 <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
-                  <img src="widgets/sigi-ficha-proyecto/images/IndicadorOff.png" height="15px" style={{ marginTop: '30px' }} alt="" />
+                  <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
                 </div>
                 <div 
                   className="inversion-descripcion-icon" 
@@ -1210,15 +1243,15 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     const hasFase3 = this.hasFaseContracts('FASE 3');
     const hasOtros = projectData.OTROS_COSTOS !== null || this.hasFaseContracts('OTROS COSTOS');
 
-    const imgFase1 = hasFase1 ? 'widgets/sigi-ficha-proyecto/images/Fase1On.png' : 'widgets/sigi-ficha-proyecto/images/Fase1Off.png';
-    const imgFase2 = hasFase2 ? 'widgets/sigi-ficha-proyecto/images/Fase2On.png' : 'widgets/sigi-ficha-proyecto/images/Fase2Off.png';
-    const imgFase3 = hasFase3 ? 'widgets/sigi-ficha-proyecto/images/Fase3On.png' : 'widgets/sigi-ficha-proyecto/images/Fase3Off.png';
-    const imgOtros = hasOtros ? 'widgets/sigi-ficha-proyecto/images/OtrosCostos1On.png' : 'widgets/sigi-ficha-proyecto/images/OtrosCostos1Off.png';
+    const imgFase1 = hasFase1 ? this.getImageUrl('Fase1On.png') : this.getImageUrl('Fase1Off.png');
+    const imgFase2 = hasFase2 ? this.getImageUrl('Fase2On.png') : this.getImageUrl('Fase2Off.png');
+    const imgFase3 = hasFase3 ? this.getImageUrl('Fase3On.png') : this.getImageUrl('Fase3Off.png');
+    const imgOtros = hasOtros ? this.getImageUrl('OtrosCostos1On.png') : this.getImageUrl('OtrosCostos1Off.png');
 
-    const imgIndc1 = selectedFase?.toUpperCase() === 'FASE 1' ? 'widgets/sigi-ficha-proyecto/images/IndicadorOn.png' : 'widgets/sigi-ficha-proyecto/images/IndicadorOff.png';
-    const imgIndc2 = selectedFase?.toUpperCase() === 'FASE 2' ? 'widgets/sigi-ficha-proyecto/images/IndicadorOn.png' : 'widgets/sigi-ficha-proyecto/images/IndicadorOff.png';
-    const imgIndc3 = selectedFase?.toUpperCase() === 'FASE 3' ? 'widgets/sigi-ficha-proyecto/images/IndicadorOn.png' : 'widgets/sigi-ficha-proyecto/images/IndicadorOff.png';
-    const imgIndcO = selectedFase?.toUpperCase() === 'OTROS COSTOS' ? 'widgets/sigi-ficha-proyecto/images/IndicadorOn.png' : 'widgets/sigi-ficha-proyecto/images/IndicadorOff.png';
+    const imgIndc1 = selectedFase?.toUpperCase() === 'FASE 1' ? this.getImageUrl('IndicadorOn.png') : this.getImageUrl('IndicadorOff.png');
+    const imgIndc2 = selectedFase?.toUpperCase() === 'FASE 2' ? this.getImageUrl('IndicadorOn.png') : this.getImageUrl('IndicadorOff.png');
+    const imgIndc3 = selectedFase?.toUpperCase() === 'FASE 3' ? this.getImageUrl('IndicadorOn.png') : this.getImageUrl('IndicadorOff.png');
+    const imgIndcO = selectedFase?.toUpperCase() === 'OTROS COSTOS' ? this.getImageUrl('IndicadorOn.png') : this.getImageUrl('IndicadorOff.png');
 
     return (
       <div className="detail-tab-container project-progress">

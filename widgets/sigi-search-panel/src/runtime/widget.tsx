@@ -1372,10 +1372,29 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     }
   };
 
+  // reset map to the initial extent captured when the view activated
+  resetMapExtent = (): void => {
+    const { jimuMapView, initialExtent } = this.state;
+    console.log('[SIGI Search] resetMapExtent called, jimuMapView:', !!jimuMapView, 'initialExtent:', initialExtent);
+    if (jimuMapView && jimuMapView.view) {
+      if (initialExtent) {
+        jimuMapView.view.goTo(initialExtent).catch(err => {
+          console.warn('[SIGI Search] error going to stored extent:', err);
+        });
+      } else {
+        console.warn('[SIGI Search] no initialExtent available, using fallback coordinates');
+        // fallback coordinates if desired
+        jimuMapView.view.goTo({ center: [-74.1, 4.6], zoom: 10 }).catch(() => { });
+      }
+    } else {
+      console.warn('[SIGI Search] cannot reset extent, map view is not ready');
+    }
+  };
+
   // Clear all filters
   clearFilters = (): void => {
     const { graphicsLayer, geocoderGraphicsLayer, proyectosLayer } = this.state;
-    
+    this.resetMapExtent();
     // Clear graphics
     graphicsLayer?.removeAll();
     geocoderGraphicsLayer?.removeAll();

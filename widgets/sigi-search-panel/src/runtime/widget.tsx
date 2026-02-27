@@ -45,33 +45,33 @@ interface WidgetState {
   localidadesLayer: FeatureLayer | null;
   graphicsLayer: GraphicsLayer | null;
   geocoderGraphicsLayer: GraphicsLayer | null;
-  
+
   // Data
   allFeatures: ProjectFeature[];
   filteredFeatures: ProjectFeature[];
   localidades: string[];
   localidadFieldName: string; // Campo dinámico para localidades
-  
+
   // Filters
   selectedPDD: string[];
   selectedEstados: string[];
   selectedLocalidad: string;
   projectCode: string;
   contractNumber: string;
-  
+
   // Search
   searchText: string;
   searchResults: any[];
   showSearchResults: boolean;
   geocoderSuggestions: any[];
   showGeocoderSuggestions: boolean;
-  
+
   // UI State
   isLoading: boolean;
   expandedSection: string;
   showPDDDescription: boolean;
   currentPDDDescription: PDDOption | null;
-  
+
   // Validation
   projectCodeError: boolean;
   contractNumberError: boolean;
@@ -79,12 +79,18 @@ interface WidgetState {
 
 // Styles
 const widgetStyles = css`
+  .x-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
   .sigi-search-panel {
     height: 100%;
     display: flex;
     flex-direction: column;
     background-color: #fff;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     overflow: hidden;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -93,17 +99,33 @@ const widgetStyles = css`
   }
 
   .search-section {
-    padding: 16px 20px;
+    padding: 16px;
     overflow-y: auto;
     flex: 1;
-  }
+    background: linear-gradient(
+        to top,
+        #ffffff 0%,
+        #f7f7f8 100%
+      );  
+    }
 
   .accordion-header {
-    background-color: transparent;
+    /* background: linear-gradient(
+      to top,
+      #e9e9ea 0%,
+      #f4f4f5 100%
+    ); */
+    background: linear-gradient(
+      to top,
+        #ffffff 0%,
+      #f7f7f8 100%
+    );
     color: #108adc;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 14px;
-    padding: 12px 0;
+    font-family: 'Inter', sans-serif;
+
+    padding: 14px 18px;
     cursor: pointer;
     border: none;
     width: 100%;
@@ -111,26 +133,40 @@ const widgetStyles = css`
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     margin-bottom: 0;
-    border-radius: 0;
-    transition: all 0.2s ease;
+    border-radius: 5px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    transition: all 0.25s ease;
   }
 
   .accordion-header:hover {
-    background-color: transparent;
+    box-shadow: 0 6px 16px rgba(16, 138, 220, 0.22);
   }
 
   .accordion-header.active {
-    font-weight: 800;
+    border-radius: 6px;
+  }
+
+  .accordion-header:active {
+    color: #000000;
+
+    /* efecto presionado */
+    box-shadow: inset 0 2px 4px rgba(36, 35, 35, 0.15);
   }
 
   .accordion-content {
-    background-color: #ffffff;
-    padding: 12px 0;
-    border: none;
-    border-radius: 0;
-    margin-bottom: 8px;
-  }
+    background: #ffffff;
+    padding: 20px;
+
+    margin-top: -8px;     
+    margin-bottom: 16px;
+
+    border-radius: 6px; 
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  } 
 
   .description-text {
     font-size: 12px;
@@ -457,7 +493,7 @@ const widgetStyles = css`
 `;
 
 export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<IMConfig>, WidgetState> {
-  
+
   private searchContainerRef = React.createRef<HTMLDivElement>();
   private geocoderContainerRef = React.createRef<HTMLDivElement>();
   private locatorUrl = 'https://utility.arcgis.com/usrsvcs/servers/7f935bb47e864c7398662cadeff7db41/rest/services/World/GeocodeServer';
@@ -466,6 +502,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   constructor(props: AllWidgetProps<IMConfig>) {
     super(props);
     this.state = {
+
       jimuMapView: null,
       proyectosLayer: null,
       localidadesLayer: null,
@@ -486,7 +523,8 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       geocoderSuggestions: [],
       showGeocoderSuggestions: false,
       isLoading: false,
-      expandedSection: '', // Ninguna sección colapsable abierta por defecto
+      // expandedSection: '', // Ninguna sección colapsable abierta por defecto
+      expandedSection: 'general', // Sección General expandida por defecto
       showPDDDescription: false,
       currentPDDDescription: null,
       projectCodeError: false,
@@ -503,11 +541,11 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   }
 
   handleClickOutside = (event: MouseEvent): void => {
-    if (this.searchContainerRef.current && 
-        !this.searchContainerRef.current.contains(event.target as Node)) {
-      this.setState({ 
+    if (this.searchContainerRef.current &&
+      !this.searchContainerRef.current.contains(event.target as Node)) {
+      this.setState({
         showSearchResults: false,
-        showGeocoderSuggestions: false 
+        showGeocoderSuggestions: false
       });
     }
   };
@@ -525,7 +563,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   initializeLayers = async (): Promise<void> => {
     const { jimuMapView } = this.state;
     const { config } = this.props;
-    
+
     if (!jimuMapView) return;
 
     this.setState({ isLoading: true });
@@ -534,7 +572,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       // Create graphics layer for search results
       let graphicsLayer = jimuMapView.view.map.findLayerById('sigi-search-graphics') as GraphicsLayer;
       if (!graphicsLayer) {
-        graphicsLayer = new GraphicsLayer({ 
+        graphicsLayer = new GraphicsLayer({
           id: 'sigi-search-graphics',
           title: 'Resultados de Búsqueda SIGI',
           listMode: 'hide'
@@ -544,11 +582,11 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
       // Buscar las capas en el mapa existente
       const allLayers = jimuMapView.view.map.allLayers;
-      console.log('[SIGI Search] All layers in map:', allLayers.map(l => ({ 
-        id: l.id, 
-        title: l.title, 
+      console.log('[SIGI Search] All layers in map:', allLayers.map(l => ({
+        id: l.id,
+        title: l.title,
         type: l.type,
-        url: (l as any).url 
+        url: (l as any).url
       })).toArray());
 
       let proyectosLayer: FeatureLayer | null = null;
@@ -556,7 +594,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
       // 1. Intentar usar URLs de configuración si están disponibles
       if (config?.proyectosLayerUrl) {
-        const matchingLayer = allLayers.find((l: any) => 
+        const matchingLayer = allLayers.find((l: any) =>
           l.type === 'feature' && l.url && l.url.includes(config.proyectosLayerUrl)
         );
         if (matchingLayer) {
@@ -566,7 +604,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       }
 
       if (config?.localidadesLayerUrl) {
-        const matchingLayer = allLayers.find((l: any) => 
+        const matchingLayer = allLayers.find((l: any) =>
           l.type === 'feature' && l.url && l.url.includes(config.localidadesLayerUrl)
         );
         if (matchingLayer) {
@@ -582,11 +620,11 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
             const title = (layer.title || '').toLowerCase();
             const url = (layer.url || '').toLowerCase();
             const layerId = (layer.id || '').toLowerCase();
-            
+
             // Identificar capa de proyectos
             if (!proyectosLayer && (
-              title.includes('proyecto') || 
-              title.includes('sigi') || 
+              title.includes('proyecto') ||
+              title.includes('sigi') ||
               title.includes('eaab') ||
               title.includes('alcantarillado') ||
               layerId.includes('proyecto') ||
@@ -595,10 +633,10 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
               proyectosLayer = layer as FeatureLayer;
               console.log('[SIGI Search] Found proyectos layer by keyword:', layer.title);
             }
-            
+
             // Identificar capa de localidades
             if (!localidadesLayer && (
-              title.includes('localidad') || 
+              title.includes('localidad') ||
               title.includes('localidades') ||
               layerId.includes('localidad') ||
               (url && (url.includes('featureserver/1') || url.endsWith('/1')))
@@ -618,9 +656,9 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
           if (fl.fields) {
             const fieldNames = fl.fields.map(f => f.name.toUpperCase());
             // Si tiene campos típicos de proyectos
-            if (fieldNames.includes('COD_PROYEC') || 
-                fieldNames.includes('NOM_PROYEC') || 
-                fieldNames.includes('CODIGO_PROYECTO')) {
+            if (fieldNames.includes('COD_PROYEC') ||
+              fieldNames.includes('NOM_PROYEC') ||
+              fieldNames.includes('CODIGO_PROYECTO')) {
               proyectosLayer = fl;
               console.log('[SIGI Search] Found proyectos layer by fields:', fl.title);
               break;
@@ -689,7 +727,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
     try {
       console.log('[SIGI Search] Loading all features from:', proyectosLayer.title);
-      
+
       const query = new Query();
       query.where = '1=1';
       query.returnGeometry = true;
@@ -697,7 +735,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
       const result = await proyectosLayer.queryFeatures(query);
       console.log('[SIGI Search] Loaded', result.features.length, 'features');
-      
+
       if (result.features.length > 0) {
         console.log('[SIGI Search] Sample feature attributes:', result.features[0].attributes);
       }
@@ -726,9 +764,9 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
         return codeA.toString().localeCompare(codeB.toString());
       });
 
-      this.setState({ 
+      this.setState({
         allFeatures: features,
-        isLoading: false 
+        isLoading: false
       });
 
     } catch (error) {
@@ -748,18 +786,18 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     try {
       // Primero obtener los campos disponibles
       const fields = localidadesLayer.fields;
-      console.log('[SIGI Search] Localidades layer fields:', fields?.map(f => ({ 
-        name: f.name, 
+      console.log('[SIGI Search] Localidades layer fields:', fields?.map(f => ({
+        name: f.name,
         alias: f.alias,
-        type: f.type 
+        type: f.type
       })));
 
       // Buscar el campo correcto para el nombre de localidad
       const possibleFields = ['LOCNOMBRE', 'LocNombre', 'NOMBRE', 'Nombre', 'NAME', 'NOM_LOC', 'LOCALIDAD', 'NOMBRE_LOCALIDAD'];
       let nameField = 'LOCNOMBRE';
-      
+
       if (fields) {
-        const foundField = fields.find(f => 
+        const foundField = fields.find(f =>
           possibleFields.some(pf => f.name.toUpperCase() === pf.toUpperCase())
         );
         if (foundField) {
@@ -782,7 +820,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       query.returnDistinctValues = false;
 
       const result = await localidadesLayer.queryFeatures(query);
-      
+
       console.log('[SIGI Search] Localidades query result:', result.features.length, 'features');
       if (result.features.length > 0) {
         console.log('[SIGI Search] Sample localidad attributes:', result.features[0].attributes);
@@ -816,7 +854,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Helper: Detectar nombre de campo automáticamente
   getFieldName = (feature: ProjectFeature, possibleNames: string[]): string | null => {
     if (!feature || !feature.attributes) return null;
-    
+
     for (const name of possibleNames) {
       const found = Object.keys(feature.attributes).find(
         key => key.toUpperCase() === name.toUpperCase()
@@ -829,7 +867,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Helper: Obtener valor de campo usando nombres posibles
   getFieldValue = (feature: ProjectFeature, possibleNames: string[]): any => {
     if (!feature || !feature.attributes) return null;
-    
+
     for (const name of possibleNames) {
       const found = Object.keys(feature.attributes).find(
         key => key.toUpperCase() === name.toUpperCase()
@@ -844,7 +882,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Handle PDD checkbox change
   handlePDDChange = (pddValue: string, checked: boolean): void => {
     const { config } = this.props;
-    
+
     this.setState(prevState => {
       const newSelectedPDD = checked
         ? [...prevState.selectedPDD, pddValue]
@@ -852,11 +890,11 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
       // Get PDD description
       const pddOption = config.pddOptions?.find(p => p.value === pddValue);
-      
+
       return {
         selectedPDD: newSelectedPDD,
         showPDDDescription: newSelectedPDD.length > 0,
-        currentPDDDescription: newSelectedPDD.length > 0 
+        currentPDDDescription: newSelectedPDD.length > 0
           ? config.pddOptions?.find(p => p.value === newSelectedPDD[newSelectedPDD.length - 1]) || null
           : null
       };
@@ -875,7 +913,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Handle localidad selection
   handleLocalidadChange = async (localidad: string): Promise<void> => {
     this.setState({ selectedLocalidad: localidad, isLoading: true });
-    
+
     if (!localidad) {
       this.clearFilters();
       return;
@@ -900,7 +938,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
 
       const locResult = await localidadesLayer.queryFeatures(locQuery);
       console.log('Localidad query result:', locResult.features.length, 'features');
-      
+
       if (locResult.features.length === 0) {
         console.log('No localidad found for:', localidad);
         this.setState({ isLoading: false });
@@ -924,7 +962,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
         geometry: f.geometry
       })) as ProjectFeature[];
 
-      features.sort((a, b) => 
+      features.sort((a, b) =>
         (a.attributes.COD_PROYEC || '').localeCompare(b.attributes.COD_PROYEC || '')
       );
 
@@ -947,8 +985,8 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   handleProjectCodeChange = (value: string): void => {
     const projectCodePattern = /^[a-zA-Z]{2}-\d{4}-\d{3}$/;
     const isValid = projectCodePattern.test(value) || value === '';
-    
-    this.setState({ 
+
+    this.setState({
       projectCode: value,
       projectCodeError: !isValid && value !== '',
       contractNumber: '', // Disable contract field when using project code
@@ -963,8 +1001,8 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   handleContractNumberChange = (value: string): void => {
     const contractPattern = /^\d-\d{2}-\d{5}-\d{4}-\d{4}$/;
     const isValid = contractPattern.test(value) || value === '';
-    
-    this.setState({ 
+
+    this.setState({
       contractNumber: value,
       contractNumberError: !isValid && value !== '',
       projectCode: '', // Disable project code field when using contract
@@ -989,9 +1027,9 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
           this.getGeocoderSuggestions(value);
         }, 300);
       } else {
-        this.setState({ 
-          geocoderSuggestions: [], 
-          showGeocoderSuggestions: false 
+        this.setState({
+          geocoderSuggestions: [],
+          showGeocoderSuggestions: false
         });
       }
     });
@@ -1007,22 +1045,22 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       };
 
       const response = await locator.suggestLocations(this.locatorUrl, params);
-      
+
       const suggestions = response.map(suggestion => ({
         text: suggestion.text,
         magicKey: suggestion.magicKey,
         isCollection: suggestion.isCollection
       }));
 
-      this.setState({ 
+      this.setState({
         geocoderSuggestions: suggestions,
-        showGeocoderSuggestions: suggestions.length > 0 
+        showGeocoderSuggestions: suggestions.length > 0
       });
     } catch (error) {
       console.error('[SIGI Search] Error getting geocoder suggestions:', error);
-      this.setState({ 
-        geocoderSuggestions: [], 
-        showGeocoderSuggestions: false 
+      this.setState({
+        geocoderSuggestions: [],
+        showGeocoderSuggestions: false
       });
     }
   };
@@ -1030,10 +1068,10 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Handle geocoder suggestion selection
   handleGeocoderSelect = async (suggestion: any): Promise<void> => {
     try {
-      this.setState({ 
+      this.setState({
         searchText: suggestion.text,
         showGeocoderSuggestions: false,
-        isLoading: true 
+        isLoading: true
       });
 
       // Geocode the address
@@ -1096,7 +1134,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     if (!jimuMapView) return;
 
     let graphicsLayer = geocoderGraphicsLayer;
-    
+
     if (!graphicsLayer) {
       graphicsLayer = new GraphicsLayer({
         id: 'geocoderGraphicsLayer',
@@ -1149,7 +1187,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Find intersecting features with buffer geometry
   findIntersectingFeatures = async (bufferGeometry: __esri.Polygon): Promise<void> => {
     const { proyectosLayer, jimuMapView } = this.state;
-    
+
     if (!proyectosLayer || !jimuMapView) {
       this.setState({ isLoading: false });
       return;
@@ -1163,7 +1201,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       query.outFields = ['*'];
 
       const result = await proyectosLayer.queryFeatures(query);
-      
+
       console.log('[SIGI Search] Found', result.features.length, 'features within 3km buffer');
 
       const features = result.features.map(f => ({
@@ -1179,16 +1217,16 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
         return codeA.toString().localeCompare(codeB.toString());
       });
 
-      this.setState({ 
+      this.setState({
         filteredFeatures: features,
-        isLoading: false 
+        isLoading: false
       });
 
       // Update layer definition expression
       if (features.length > 0) {
         const objectIds = features.map(f => f.attributes.OBJECTID).join(',');
         proyectosLayer.definitionExpression = `OBJECTID IN (${objectIds})`;
-        
+
         // Zoom to buffer center
         const center = bufferGeometry.extent.center;
         await jimuMapView.view.goTo({
@@ -1208,7 +1246,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Perform search for sectors/localidades/barrios
   performSearch = async (text: string): Promise<void> => {
     const { localidades, allFeatures } = this.state;
-    
+
     const searchLower = text.toLowerCase();
     const results: any[] = [];
 
@@ -1226,7 +1264,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     // Search in project names (as barrios/sectores)
     const localidadFieldNames = ['LOCALIDAD', 'LOC_NOMBRE', 'NOMBRE_LOCALIDAD', 'NOM_LOC'];
     const uniqueLocalities = new Set<string>();
-    
+
     allFeatures.forEach(f => {
       const localidad = this.getFieldValue(f, localidadFieldNames);
       if (localidad) {
@@ -1245,17 +1283,17 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       }
     });
 
-    this.setState({ 
+    this.setState({
       searchResults: results.slice(0, 10), // Limit to 10 results
-      showSearchResults: results.length > 0 
+      showSearchResults: results.length > 0
     });
   };
 
   // Handle search result selection
   handleSearchResultSelect = (result: any): void => {
-    this.setState({ 
+    this.setState({
       searchText: result.name,
-      showSearchResults: false 
+      showSearchResults: false
     });
 
     if (result.type === 'localidad') {
@@ -1269,9 +1307,9 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
   // Filter projects by localidad name
   filterByLocalidad = async (localidadName: string): Promise<void> => {
     const { allFeatures, jimuMapView } = this.state;
-    
+
     const localidadFieldNames = ['LOCALIDAD', 'LOC_NOMBRE', 'NOMBRE_LOCALIDAD', 'NOM_LOC'];
-    
+
     const filtered = allFeatures.filter(f => {
       const localidadValue = this.getFieldValue(f, localidadFieldNames);
       return localidadValue && localidadValue.toString().toLowerCase() === localidadName.toLowerCase();
@@ -1339,10 +1377,10 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     }
 
     // Only show results if at least one filter is active
-    const hasActiveFilters = selectedPDD.length > 0 || selectedEstados.length > 0 || 
-                            projectCode !== '' || contractNumber !== '';
+    const hasActiveFilters = selectedPDD.length > 0 || selectedEstados.length > 0 ||
+      projectCode !== '' || contractNumber !== '';
 
-    this.setState({ 
+    this.setState({
       filteredFeatures: hasActiveFilters ? filtered : []
     });
 
@@ -1433,7 +1471,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     }
 
     let point = feature.geometry as Point;
-    
+
     // Convert to Web Mercator if needed
     if (feature.geometry.spatialReference?.wkid === 4686) {
       point = webMercatorUtils.geographicToWebMercator(feature.geometry) as Point;
@@ -1449,7 +1487,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       // Enviar evento personalizado para que sigi-ficha-proyecto lo reciba
       console.log('[SIGI Search] Publishing show-project message for:', feature.attributes.COD_PROYEC);
       console.log('[SIGI Search] Project data:', feature.attributes);
-      
+
       // Usar evento personalizado de window
       const event = new CustomEvent('sigi-show-project', {
         detail: {
@@ -1462,7 +1500,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
       console.log('[SIGI Search] Messages sent successfully');
     }).catch((error) => {
       console.error('[SIGI Search] Error during goTo:', error);
-      
+
       // Intentar enviar el mensaje de todos modos
       const event = new CustomEvent('sigi-show-project', {
         detail: {
@@ -1553,59 +1591,121 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
           {/* Search Sections */}
           <div className="search-section">
             {/* Búsqueda General */}
-            <div className="accordion-header active" style={{ cursor: 'default' }}>
-              BÚSQUEDA GENERAL
-            </div>
-            <div className="accordion-content">
-              <span className="description-text">
-                Digite el nombre del sector, localidad o barrio que desea consultar
-              </span>
-              <div className="search-with-icon" ref={this.searchContainerRef}>
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => this.handleSearchTextChange(e.target.value)}
-                  onFocus={() => {
-                    if (geocoderSuggestions.length > 0) {
-                      this.setState({ showGeocoderSuggestions: true });
-                    }
-                  }}
-                  placeholder=""
-                />
-                <span className="dropdown-arrow">▼</span>
-                {showGeocoderSuggestions && geocoderSuggestions.length > 0 && (
-                  <div className="search-results-dropdown">
-                    {geocoderSuggestions.map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className="search-result-item"
-                        onClick={() => this.handleGeocoderSelect(suggestion)}
-                      >
-                        {suggestion.text}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <span className="description-text" style={{ marginTop: '16px' }}>
-                Seleccione la Localidad
-              </span>
-              <select
-                className="localidad-native-select"
-                value={selectedLocalidad}
-                onChange={(e) => this.handleLocalidadChange(e.target.value)}
-              >
-                <option value="">-- Seleccione --</option>
-                {localidades.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
-            </div>
 
+            <button
+              className={`accordion-header ${expandedSection === 'general' ? 'active' : ''}`}
+              onClick={() => this.toggleSection('general')}
+            >
+              BÚSQUEDA GENERAL
+            </button>
+            <Collapse isOpen={expandedSection === 'general'}>
+
+              <div className="accordion-content">
+                <span className="description-text">
+                  Digite el nombre del sector, localidad o barrio que desea consultar
+                </span>
+                <div className="search-with-icon" ref={this.searchContainerRef}>
+                  <span className="search-icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => this.handleSearchTextChange(e.target.value)}
+                    onFocus={() => {
+                      if (geocoderSuggestions.length > 0) {
+                        this.setState({ showGeocoderSuggestions: true });
+                      }
+                    }}
+                    placeholder=""
+                  />
+                  {/* dropdown */}
+                  {/* <span className="-arrow">▼</span> */}
+                  {searchText && searchText.trim().length > 0 && (
+
+                    <span
+                      className="x-button"
+                      onClick={() => this.clearFilters()}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="#666"
+                          strokeWidth="2"
+                          fill="none"
+                        />
+                        <line
+                          x1="9"
+                          y1="9"
+                          x2="15"
+                          y2="15"
+                          stroke="#666"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1="15"
+                          y1="9"
+                          x2="9"
+                          y2="15"
+                          stroke="#666"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                  {showGeocoderSuggestions && geocoderSuggestions.length > 0 && (
+                    <div className="search-results-dropdown">
+                      {geocoderSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="search-result-item"
+                          onClick={() => this.handleGeocoderSelect(suggestion)}
+                        >
+                          {suggestion.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <span className="description-text" style={{ marginTop: '16px' }}>
+                  Seleccione la Localidad
+                </span>
+                <select
+                  className="localidad-native-select"
+                  value={selectedLocalidad}
+                  onChange={(e) => this.handleLocalidadChange(e.target.value)}
+                >
+                  <option value="">-- Seleccione --</option>
+                  {localidades.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+            </Collapse>
             {/* Búsqueda Específica */}
-            <button 
+            <button
               className={`accordion-header ${expandedSection === 'specific' ? 'active' : ''}`}
               onClick={() => this.toggleSection('specific')}
             >
@@ -1616,7 +1716,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
                 <span className="description-text">
                   Seleccione o digite los parámetros de búsqueda
                 </span>
-                
+
                 <div className="filter-row">
                   {/* PDD Filter */}
                   <div className="filter-col">
@@ -1666,7 +1766,7 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
             </Collapse>
 
             {/* Búsqueda por Proyecto */}
-            <button 
+            <button
               className={`accordion-header ${expandedSection === 'project' ? 'active' : ''}`}
               onClick={() => this.toggleSection('project')}
             >
@@ -1719,8 +1819,8 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
             <div className="results-section">
               <div className="results-header">
                 <span>Proyectos seleccionados: <span className="results-count">{filteredFeatures.length}</span></span>
-                <button 
-                  className="download-button" 
+                <button
+                  className="download-button"
                   title="Descargar Excel"
                   onClick={this.handleExportExcel}
                 />
@@ -1731,19 +1831,19 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
                     {filteredFeatures.map(feature => {
                       const codeFieldNames = ['COD_PROYEC', 'CODIGO_PROYECTO', 'COD_PROYECTO', 'CODIGO'];
                       const nameFieldNames = ['NOM_PROYEC', 'NOMBRE_PROYECTO', 'NOM_PROYECTO', 'NOMBRE'];
-                      
+
                       const projectCode = this.getFieldValue(feature, codeFieldNames) || 'Sin código';
                       const projectName = this.getFieldValue(feature, nameFieldNames) || 'Sin nombre';
-                      
+
                       return (
-                        <tr 
+                        <tr
                           key={feature.attributes.OBJECTID}
                           onClick={() => this.handleProjectClick(feature)}
                         >
                           <td>{projectCode}</td>
                           <td>{projectName}</td>
                           <td>
-                            <button 
+                            <button
                               className="view-button"
                               title="Ver ficha del proyecto"
                               onClick={(e) => {

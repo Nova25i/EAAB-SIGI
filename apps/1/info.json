@@ -1,0 +1,28 @@
+{
+  "created": 1771882832025,
+  "description": "",
+  "id": "1",
+  "modified": 1772572745016,
+  "owner": "adminportal",
+  "tags": [],
+  "thumbnail": null,
+  "title": "EAAB - SIGI",
+  "type": "Web Experience",
+  "snippet": "",
+  "typeKeywords": [
+    "EXB Experience",
+    "Ready To Use",
+    "JavaScript",
+    "status: Published",
+    "version:1.19.0",
+    "modified: 1772572744268",
+    "publishVersion:1.19.0"
+  ],
+  "portalUrl": "https://www.acueducto.com.co/portalgis",
+  "username": "adminportal",
+  "name": "EAAB - SIGI",
+  "isLocalApp": true,
+  "url": null,
+  "success": true,
+  "clearEmptyFields": true
+}

@@ -2,45 +2,57 @@
 /**
  * Widget SIGI Header Bar
  * Barra superior con búsqueda y botones de navegación
- * Migrado desde Web AppBuilder - widgets Search, ZoomIn, ZoomOut, HomeButton, MyLocation
  */
 
 import { React, jsx, css, type AllWidgetProps } from 'jimu-core';
 import { useState, useRef, useEffect } from 'react';
 import { type IMConfig } from '../config';
 import { type JimuMapView, JimuMapViewComponent } from 'jimu-arcgis';
-import { TextInput, Button, Dropdown, DropdownButton, DropdownMenu, DropdownItem, Tooltip } from 'jimu-ui';
+import { Button, Tooltip } from 'jimu-ui';
 import Locator from '@arcgis/core/rest/locator';
 import Point from '@arcgis/core/geometry/Point';
 import Graphic from '@arcgis/core/Graphic';
 
 const headerStyles = css`
+  .jimu-widget {
+    overflow: visible !important;
+  }
+
   .header-bar {
+    overflow: visible !important;
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px;
+    gap: 6px;
+    padding: 6px;
   }
 
-  /* Dropdown selector de fuente */
-  .source-selector {
-    width: 32px;
-    height: 32px;
-  }
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    background-color: #0083DB !important;
+    border: none !important;
+    padding: 0 !important;
 
-  .source-selector .dropdown-button {
-    background-color: #0083DB;
-    border: none;
-    color: white;
-    width: 100%;
-    height: 100%;
-    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
   }
 
-  /* Barra de búsqueda */
+  .icon-button:hover {
+    background-color: #139BF5 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .icon-button svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+  }
+
   .search-container {
     display: flex;
     align-items: center;
@@ -48,84 +60,33 @@ const headerStyles = css`
     max-width: 274px;
   }
 
-  .search-input {
+  .search-input-native {
     flex: 1;
-    height: 32px;
-    border: 3px solid #0083DB !important;
-    border-right: none !important;
-    border-radius: 0;
+    height: 40px;
+    border: 2px solid #0083DB;
+    outline: none;
+    padding: 0 10px;
+    font-size: 16px;
+    box-sizing: border-box;
   }
 
-  .search-input input {
-    font-size: 12px;
-  }
-
-  .search-button {
-    width: 32px;
-    height: 32px;
-    background-color: #0083DB;
-    border: 3px solid #0083DB;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .search-button:hover {
-    background-color: #8cbcfc !important;
-  }
-
-  .search-button svg {
-    width: 16px;
-    height: 16px;
-    fill: white;
-  }
-
-  /* Botones de navegación */
-  .nav-button {
-    width: 32px;
-    height: 32px;
-    background-color: #0083DB;
-    border: none;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    padding: 0;
-  }
-
-  .nav-button:hover {
-    background-color: #139BF5 !important;
-  }
-
-  .nav-button svg {
-    width: 20px;
-    height: 20px;
-    fill: white;
-  }
-
-  /* Resultados de búsqueda */
   .search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    box-sizing: border-box;
+    position: fixed;
     background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    max-height: 200px;
+    padding: 0;
+    border: 1px solid #d0d0d0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    max-height: 250px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 9999;
   }
 
   .search-result-item {
-    padding: 8px 12px;
+    margin: 0;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
-    border-bottom: 1px solid #eee;
     font-size: 12px;
   }
 
@@ -133,90 +94,87 @@ const headerStyles = css`
     background-color: #f0f8ff;
   }
 
-  /* Responsive */
+  .sigi-header-widget {
+    overflow: visible !important;
+  }
+
   @media (max-width: 600px), (max-height: 600px) {
     .search-container {
       max-width: 211px;
     }
-
-    .search-input {
-      height: 32px;
-    }
-
-    .nav-button {
-      width: 30px;
-      height: 30px;
-    }
-
-    .nav-button svg {
-      width: 15px;
-      height: 15px;
-    }
   }
 `;
 
-// Iconos SVG
+/* ICONOS */
+
 const SearchIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M11 19a8 8 0 1 1 5.3-14.1A8 8 0 0 1 11 19zm0-14a6 6 0 1 0 4.24 10.24A6 6 0 0 0 11 5zm7.71 13.29 3 3-1.42 1.42-3-3z" />
   </svg>
 );
 
 const ZoomInIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
 const ZoomOutIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 13H5v-2h14v2z"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M5 12h14" stroke="white" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
 const HomeIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M3 11l9-7 9 7" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+    <path d="M5 10v10h14V10" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
   </svg>
 );
 
 const LocationIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M12 22s6-6 6-11a6 6 0 1 0-12 0c0 5 6 11 6 11z"
+      stroke="white"
+      strokeWidth="2"
+      fill="none"
+    />
+    <circle cx="12" cy="11" r="2" fill="white" />
   </svg>
 );
 
 const DownArrowIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M7 10l5 5 5-5z" fill="white"/>
+  <svg viewBox="0 0 24 24">
+    <path d="M6 9l6 6 6-6" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
   </svg>
 );
 
-interface HeaderProps extends AllWidgetProps<IMConfig> {}
+interface HeaderProps extends AllWidgetProps<IMConfig> { }
 
 const Widget = (props: HeaderProps) => {
+
   const { config, useMapWidgetIds } = props;
+
+  const [resultsPosition, setResultsPosition] = useState({ top: 0, left: 0, width: 0 });
   const [jimuMapView, setJimuMapView] = useState<JimuMapView>(null);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedSource, setSelectedSource] = useState('SGO');
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [showSourceMenu, setShowSourceMenu] = useState(false);
 
-  // URLs de geocodificadores
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const sourceButtonRef = useRef<HTMLButtonElement>(null);
+
   const geocoderUrls = {
     SGO: 'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer',
     EAAB: config?.eaabGeocoderUrl || ''
   };
 
-  // Handler para cuando el mapa está listo
   const onActiveViewChange = (jmv: JimuMapView) => {
-    if (jmv) {
-      setJimuMapView(jmv);
-    }
+    if (jmv) setJimuMapView(jmv);
   };
 
-  // Buscar direcciones
   const handleSearch = async () => {
     if (!searchText.trim() || !jimuMapView) return;
 
@@ -231,6 +189,16 @@ const Widget = (props: HeaderProps) => {
       });
 
       setSearchResults(results);
+
+      if (searchContainerRef.current) {
+        const rect = searchContainerRef.current.getBoundingClientRect();
+        setResultsPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+          width: rect.width
+        });
+      }
+
       setShowResults(true);
     } catch (error) {
       console.error('Error en búsqueda:', error);
@@ -238,7 +206,6 @@ const Widget = (props: HeaderProps) => {
     }
   };
 
-  // Seleccionar resultado
   const selectResult = (result: any) => {
     if (!jimuMapView) return;
 
@@ -248,13 +215,8 @@ const Widget = (props: HeaderProps) => {
       spatialReference: { wkid: 4326 }
     });
 
-    // Zoom al punto
-    jimuMapView.view.goTo({
-      target: point,
-      zoom: 17
-    });
+    jimuMapView.view.goTo({ target: point, zoom: 17 });
 
-    // Agregar marcador
     const graphic = new Graphic({
       geometry: point,
       symbol: {
@@ -272,84 +234,45 @@ const Widget = (props: HeaderProps) => {
     setShowResults(false);
   };
 
-  // Zoom In
-  const handleZoomIn = () => {
-    if (jimuMapView?.view) {
-      jimuMapView.view.zoom += 1;
-    }
-  };
+  const handleZoomIn = () => jimuMapView?.view && (jimuMapView.view.zoom += 1);
+  const handleZoomOut = () => jimuMapView?.view && (jimuMapView.view.zoom -= 1);
 
-  // Zoom Out
-  const handleZoomOut = () => {
-    if (jimuMapView?.view) {
-      jimuMapView.view.zoom -= 1;
-    }
-  };
-
-  // Home (extent inicial)
   const handleHome = () => {
-    if (jimuMapView?.view) {
-      // Extent de Bogotá/Cundinamarca
-      jimuMapView.view.goTo({
-        center: [-74.1, 4.6],
-        zoom: 10
-      });
-    }
+    jimuMapView?.view?.goTo({
+      center: [-74.1, 4.6],
+      zoom: 10
+    });
   };
 
-  // Mi ubicación
   const handleMyLocation = () => {
-    if (!jimuMapView?.view) return;
+    if (!jimuMapView?.view || !navigator.geolocation) return;
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const point = new Point({
-            longitude: position.coords.longitude,
-            latitude: position.coords.latitude
-          });
+    navigator.geolocation.getCurrentPosition((position) => {
+      const point = new Point({
+        longitude: position.coords.longitude,
+        latitude: position.coords.latitude
+      });
 
-          jimuMapView.view.goTo({
-            target: point,
-            zoom: 17
-          });
+      jimuMapView.view.goTo({ target: point, zoom: 17 });
 
-          // Marcador de ubicación
-          const graphic = new Graphic({
-            geometry: point,
-            symbol: {
-              type: 'simple-marker',
-              color: '#00ff00',
-              size: '14px',
-              outline: { color: 'white', width: 2 }
-            } as any
-          });
+      const graphic = new Graphic({
+        geometry: point,
+        symbol: {
+          type: 'simple-marker',
+          color: '#00ff00',
+          size: '14px',
+          outline: { color: 'white', width: 2 }
+        } as any
+      });
 
-          jimuMapView.view.graphics.add(graphic);
-        },
-        (error) => {
-          console.error('Error obteniendo ubicación:', error);
-        }
-      );
-    }
+      jimuMapView.view.graphics.add(graphic);
+    });
   };
-
-  // Cerrar resultados al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <div css={headerStyles} className="jimu-widget sigi-header-widget">
-      {/* Conexión con el mapa */}
-      {useMapWidgetIds && useMapWidgetIds.length > 0 && (
+
+      {useMapWidgetIds?.length > 0 && (
         <JimuMapViewComponent
           useMapWidgetId={useMapWidgetIds[0]}
           onActiveViewChange={onActiveViewChange}
@@ -357,37 +280,73 @@ const Widget = (props: HeaderProps) => {
       )}
 
       <div className="header-bar">
-        {/* Selector de fuente de búsqueda */}
-        <Dropdown className="source-selector">
-          <DropdownButton className="dropdown-button">
-            <DownArrowIcon />
-          </DropdownButton>
-          <DropdownMenu>
-            <DropdownItem onClick={() => setSelectedSource('SGO')}>
-              SGO World Geocoder
-            </DropdownItem>
-            <DropdownItem onClick={() => setSelectedSource('EAAB')}>
-              Localizador EAAB
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
 
-        {/* Barra de búsqueda */}
-        <div className="search-container" ref={searchContainerRef} style={{ position: 'relative' }}>
-          <TextInput
-            className="search-input"
+        <Button
+          ref={sourceButtonRef}
+          className="icon-button"
+          onClick={() => setShowSourceMenu(!showSourceMenu)}
+        >
+          <DownArrowIcon />
+        </Button>
+        <div style={{ position: "relative" }}>
+
+          {showSourceMenu && (
+            <div
+              style={{
+                position: "fixed",
+                top: sourceButtonRef.current?.getBoundingClientRect().bottom || 0,
+                left: sourceButtonRef.current?.getBoundingClientRect().left || 0,
+                background: "white",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                border: "1px solid #ddd",
+                minWidth: "200px",
+                zIndex: 9999
+              }}
+            >
+              <div
+                className="search-result-item"
+                onClick={() => {
+                  setSelectedSource('SGO');
+                  setShowSourceMenu(false);
+                }}
+              >
+                SGO World Geocoder
+              </div>
+
+              <div
+                className="search-result-item"
+                onClick={() => {
+                  setSelectedSource('EAAB');
+                  setShowSourceMenu(false);
+                }}
+              >
+                Localizador EAAB
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="search-container" ref={searchContainerRef}>
+          <input
+            className="search-input-native"
             placeholder="Buscar dirección o lugar"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button className="search-button" onClick={handleSearch}>
-            <SearchIcon />
-          </button>
 
-          {/* Resultados */}
+          <Button className="icon-button" onClick={handleSearch}>
+            <SearchIcon />
+          </Button>
+
           {showResults && searchResults.length > 0 && (
-            <div className="search-results">
+            <div
+              className="search-results"
+              style={{
+                top: resultsPosition.top,
+                left: resultsPosition.left,
+                width: resultsPosition.width
+              }}
+            >
               {searchResults.map((result, index) => (
                 <div
                   key={index}
@@ -401,30 +360,30 @@ const Widget = (props: HeaderProps) => {
           )}
         </div>
 
-        {/* Botones de navegación */}
         <Tooltip title="Acercar" placement="bottom">
-          <Button className="nav-button" onClick={handleZoomIn}>
+          <Button className="icon-button" onClick={handleZoomIn}>
             <ZoomInIcon />
           </Button>
         </Tooltip>
 
         <Tooltip title="Alejar" placement="bottom">
-          <Button className="nav-button" onClick={handleZoomOut}>
+          <Button className="icon-button" onClick={handleZoomOut}>
             <ZoomOutIcon />
           </Button>
         </Tooltip>
 
         <Tooltip title="Vista inicial" placement="bottom">
-          <Button className="nav-button" onClick={handleHome}>
+          <Button className="icon-button" onClick={handleHome}>
             <HomeIcon />
           </Button>
         </Tooltip>
 
         <Tooltip title="Mi ubicación" placement="bottom">
-          <Button className="nav-button" onClick={handleMyLocation}>
+          <Button className="icon-button" onClick={handleMyLocation}>
             <LocationIcon />
           </Button>
         </Tooltip>
+
       </div>
     </div>
   );

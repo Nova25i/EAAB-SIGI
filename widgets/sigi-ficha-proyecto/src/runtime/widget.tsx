@@ -93,8 +93,8 @@ const formatMoney = (value: number | undefined | null): string => {
 const formatLongDate = (timestamp: number | undefined | null): string => {
   if (!timestamp) return '-';
   const date = new Date(timestamp);
-  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
 };
 
@@ -634,7 +634,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     console.log('🔷🔷🔷 SIGI FICHA PROYECTO - COMPONENT DID MOUNT 🔷🔷🔷');
     console.log('🔷 Widget ID:', this.props.id);
     console.log('🔷 Setting up event listeners...');
-    
+
     // Listen for custom events from other widgets (sigi-search-panel)
     this.eventHandler = this.handleShowProjectEvent.bind(this);
     window.addEventListener('sigi-show-project', this.eventHandler as EventListener);
@@ -664,26 +664,26 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
   // Handle project request from external widget (sigi-search-panel)
   handleExternalProjectRequest = async (projectData: any): Promise<void> => {
     let { proyectosLayer, jimuMapView } = this.state;
-    
+
     console.log('🔷🔷🔷 OPENING POPUP FOR PROJECT:', projectData.COD_PROYEC, '🔷🔷🔷');
     console.log('🔷 Current state - Layer:', proyectosLayer ? 'YES' : 'NO', 'MapView:', jimuMapView ? 'YES' : 'NO');
-    
+
     // Si no tenemos la capa cargada aún, intentar cargarla ahora
     if (!proyectosLayer && jimuMapView) {
       const layer = jimuMapView.view.map.layers.find(
-        (l: any) => l.title?.toLowerCase().includes('proyecto') || 
-                    l.title?.toLowerCase().includes('sigi')
+        (l: any) => l.title?.toLowerCase().includes('proyecto') ||
+          l.title?.toLowerCase().includes('sigi')
       ) as FeatureLayer;
-      
+
       if (layer) {
         proyectosLayer = layer;
         this.setState({ proyectosLayer: layer });
       }
     }
-    
+
     // Always open the popup, even without full data
     console.log('🔷 SETTING STATE - isOpen: true');
-    
+
     // If we have a layer, load the full project data
     if (proyectosLayer) {
       console.log('🔷 Loading full project data from layer...');
@@ -725,19 +725,19 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
 
     // Get the layer from the map
     let layer: FeatureLayer = null;
-    
+
     if (config?.CapaDeProyectos) {
       layer = jimuMapView.view.map.layers.find(
         (l: any) => l.id === config.CapaDeProyectos
       ) as FeatureLayer;
     }
-    
+
     // Si no se encuentra por configuración, buscar por nombre o tipo
     if (!layer) {
       console.log('[SIGI Ficha] Buscando capa de proyectos en el mapa...');
       layer = jimuMapView.view.map.layers.find(
-        (l: any) => l.title?.toLowerCase().includes('proyecto') || 
-                    l.title?.toLowerCase().includes('sigi')
+        (l: any) => l.title?.toLowerCase().includes('proyecto') ||
+          l.title?.toLowerCase().includes('sigi')
       ) as FeatureLayer;
     }
 
@@ -752,7 +752,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     if (layer && config?.CapaDeProyectos) {
       this.clickHandler = jimuMapView.view.on('click', async (event: __esri.ViewClickEvent) => {
         const hitResult = await jimuMapView.view.hitTest(event);
-        
+
         if (hitResult.results.length > 0) {
           for (const result of hitResult.results) {
             if ((result as any).graphic?.layer?.id === config.CapaDeProyectos) {
@@ -821,7 +821,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
       if (config.TablaPoblacional && this.state.jimuMapView) {
         try {
           const tableUrl = config.TablaPoblacional;
-          
+
           const qPopulation = new Query({
             where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
             outFields: ['*'],
@@ -900,7 +900,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
 
   // Change selected fase
   setSelectedFase = (fase: string): void => {
-    this.setState({ 
+    this.setState({
       selectedFase: fase,
       activeTab: 'detalle'
     });
@@ -931,7 +931,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
   // Get filtered and sorted contracts for selected fase
   getFilteredContracts = (): ContractData[] => {
     const { contractsData, selectedFase } = this.state;
-    
+
     const estadoOrder = ['En Ejecución', 'Suspendido', 'Suscrito Legalizado', 'Terminado', 'Liquidado', 'Proceso Jurídico', 'N/A'];
     const uniqueContracts = this.uniqueByCompositeKey(contractsData, ['NUMERO_CONTRATO', 'ESTADO_CONTRATO', 'FASE_PEP', 'OBJETO_CONTRATO', 'VALOR_CONTRATO']);
     const sortedContracts = this.sortByCustomOrder(uniqueContracts, estadoOrder, 'ESTADO_CONTRATO');
@@ -939,10 +939,10 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     if (!selectedFase) return sortedContracts;
 
     if (selectedFase.toUpperCase() === 'OTROS COSTOS') {
-      return sortedContracts.filter(c => 
-        c.FASE_PEP && 
-        c.FASE_PEP.toUpperCase() !== 'FASE 1' && 
-        c.FASE_PEP.toUpperCase() !== 'FASE 2' && 
+      return sortedContracts.filter(c =>
+        c.FASE_PEP &&
+        c.FASE_PEP.toUpperCase() !== 'FASE 1' &&
+        c.FASE_PEP.toUpperCase() !== 'FASE 2' &&
         c.FASE_PEP.toUpperCase() !== 'FASE 3'
       );
     }
@@ -954,10 +954,10 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
   hasFaseContracts = (fase: string): boolean => {
     const { contractsData } = this.state;
     if (fase === 'OTROS COSTOS') {
-      return contractsData.some((c: ContractData) => 
-        c.FASE_PEP && 
-        c.FASE_PEP.toUpperCase() !== 'FASE 1' && 
-        c.FASE_PEP.toUpperCase() !== 'FASE 2' && 
+      return contractsData.some((c: ContractData) =>
+        c.FASE_PEP &&
+        c.FASE_PEP.toUpperCase() !== 'FASE 1' &&
+        c.FASE_PEP.toUpperCase() !== 'FASE 2' &&
         c.FASE_PEP.toUpperCase() !== 'FASE 3'
       );
     }
@@ -970,19 +970,19 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     if (!projectData) return { label: 'Fecha Fin', value: '-' };
 
     if (projectData.ESTADO === 'Liquidado') {
-      return { 
-        label: 'Fecha de Liquidación', 
-        value: formatLongDate(projectData.FECHA_LIQ_PRY) 
+      return {
+        label: 'Fecha de Liquidación',
+        value: formatLongDate(projectData.FECHA_LIQ_PRY)
       };
     } else if (projectData.ESTADO === 'Terminado') {
-      return { 
-        label: 'Fecha de Terminación', 
-        value: formatLongDate(projectData.FECHA_FIN) 
+      return {
+        label: 'Fecha de Terminación',
+        value: formatLongDate(projectData.FECHA_FIN)
       };
     } else {
-      return { 
-        label: 'Fecha Fin Estimada', 
-        value: formatLongDate(projectData.FECHA_POS_FIN_PRY) 
+      return {
+        label: 'Fecha Fin Estimada',
+        value: formatLongDate(projectData.FECHA_POS_FIN_PRY)
       };
     }
   };
@@ -1003,11 +1003,11 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
         </div>
         <div className="progress-bar-col" style={{ position: 'relative' }}>
           <div className="container-progress" style={{ width: '100%', ...((style && { width: style }) || {}) }}>
-            <div 
-              className="percent" 
-              style={{ 
-                width: `${Math.min(percentProgress, 100)}%`, 
-                backgroundColor 
+            <div
+              className="percent"
+              style={{
+                width: `${Math.min(percentProgress, 100)}%`,
+                backgroundColor
               }}
             />
           </div>
@@ -1020,7 +1020,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
   renderContractCard = (contract: ContractData): React.ReactElement => {
     let fechaFin: string;
     let labelFechaFin: string;
-    
+
     if (contract.ESTADO_CONTRATO === 'Liquidado') {
       fechaFin = formatLongDate(contract.FECHA_LIQ_CONT);
       labelFechaFin = 'Fecha de Liquidación';
@@ -1158,8 +1158,8 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
             <div style={{ padding: '10px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <div style={{ width: '15%' }}></div>
-                <div 
-                  className="inversion-descripcion-icon" 
+                <div
+                  className="inversion-descripcion-icon"
                   style={{ width: '20%', cursor: 'pointer' }}
                   onClick={() => this.setSelectedFase('FASE 1')}
                 >
@@ -1168,8 +1168,8 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                 <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
                   <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
                 </div>
-                <div 
-                  className="inversion-descripcion-icon" 
+                <div
+                  className="inversion-descripcion-icon"
                   style={{ width: '20%', cursor: 'pointer' }}
                   onClick={() => this.setSelectedFase('FASE 2')}
                 >
@@ -1178,8 +1178,8 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                 <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
                   <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
                 </div>
-                <div 
-                  className="inversion-descripcion-icon" 
+                <div
+                  className="inversion-descripcion-icon"
                   style={{ width: '20%', cursor: 'pointer' }}
                   onClick={() => this.setSelectedFase('FASE 3')}
                 >
@@ -1192,10 +1192,10 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
             <div style={{ padding: '10px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <div style={{ width: '20%' }}></div>
-                <div 
-                  className="inversion-descripcion-icon" 
-                  style={{ 
-                    width: '60%', 
+                <div
+                  className="inversion-descripcion-icon"
+                  style={{
+                    width: '60%',
                     cursor: hasOtrosCostos ? 'pointer' : 'default',
                     opacity: hasOtrosCostos ? 1 : 0.4
                   }}
@@ -1216,8 +1216,8 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
 
           <div className="project-image-container">
             {projectImageUrl ? (
-              <img 
-                src={projectImageUrl} 
+              <img
+                src={projectImageUrl}
                 alt={projectData.NOM_PROYEC}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
@@ -1258,7 +1258,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
         <div className="detalle-layout">
           <div className="detalle-sidebar">
             <div className="fase-button-container">
-              <div 
+              <div
                 className="fase-icon-column inversion-detalle-icon"
                 onClick={() => this.setSelectedFase('FASE 1')}
                 style={{ cursor: 'pointer' }}
@@ -1271,7 +1271,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
             </div>
 
             <div className="fase-button-container">
-              <div 
+              <div
                 className="fase-icon-column inversion-detalle-icon"
                 onClick={() => this.setSelectedFase('FASE 2')}
                 style={{ cursor: 'pointer' }}
@@ -1284,7 +1284,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
             </div>
 
             <div className="fase-button-container">
-              <div 
+              <div
                 className="fase-icon-column inversion-detalle-icon"
                 onClick={() => this.setSelectedFase('FASE 3')}
                 style={{ cursor: 'pointer' }}
@@ -1297,7 +1297,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
             </div>
 
             <div className="fase-button-container">
-              <div 
+              <div
                 className="fase-icon-column inversion-detalle-icon"
                 onClick={() => hasOtros && this.setSelectedFase('OTROS COSTOS')}
                 style={{ cursor: hasOtros ? 'pointer' : 'default', opacity: hasOtros ? 1 : 0.4 }}
@@ -1320,7 +1320,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                 ))
               ) : (
                 <div style={{ textAlign: 'center', width: '95%', marginTop: '20px' }}>
-                  Para el período comprendido entre junio de 2016 a la fecha de corte, 
+                  Para el período comprendido entre junio de 2016 a la fecha de corte,
                   no se han ejecutado recursos por el concepto de Inversiones.
                 </div>
               )}
@@ -1413,15 +1413,15 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
 
             <div className="poblacion-note-container">
               <span>
-                <strong>NOTA:</strong> Las inversiones de la EAAB ESP no se asocian a un enfoque poblacional, 
-                debido a que no implementan acciones afirmativas diferenciales para grupos poblacionales con 
-                condiciones o características étnicas, transcurrir vital, género, orientaciones sexuales e 
-                identidades de género, discapacidad o víctimas del conflicto armado, sino que, pretende que 
-                la cobertura, continuidad y calidad de los servicios de acueducto y alcantarillado sea universal 
-                para todos los habitantes de la ciudad. En este sentido, y entendiendo la naturaleza de los 
-                proyectos a cargo de la EAAB, sí desarrollan un enfoque territorial que reconoce las necesidades 
-                particulares de las zonas a intervenir, e implementa soluciones de rehabilitación, expansión, 
-                renovación o reposición con una ubicación geográfica definida y reportada trimestralmente al 
+                <strong>NOTA:</strong> Las inversiones de la EAAB ESP no se asocian a un enfoque poblacional,
+                debido a que no implementan acciones afirmativas diferenciales para grupos poblacionales con
+                condiciones o características étnicas, transcurrir vital, género, orientaciones sexuales e
+                identidades de género, discapacidad o víctimas del conflicto armado, sino que, pretende que
+                la cobertura, continuidad y calidad de los servicios de acueducto y alcantarillado sea universal
+                para todos los habitantes de la ciudad. En este sentido, y entendiendo la naturaleza de los
+                proyectos a cargo de la EAAB, sí desarrollan un enfoque territorial que reconoce las necesidades
+                particulares de las zonas a intervenir, e implementa soluciones de rehabilitación, expansión,
+                renovación o reposición con una ubicación geográfica definida y reportada trimestralmente al
                 aplicativo SEGPLAN.
               </span>
             </div>
@@ -1463,7 +1463,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                   <h1 className="modal-title">{projectData?.COD_PROYEC || ''}</h1>
                   <button className="close" onClick={this.closeModal}>×</button>
                 </div>
-                
+
                 <div className="modal-title-secondary">
                   <h2 style={{ margin: 0, fontSize: '15px' }}>{projectData?.NOM_PROYEC || ''}</h2>
                 </div>

@@ -559,8 +559,169 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     }
   };
 
-  // Initialize layers - Usar las capas del mapa en lugar de crear nuevas
+  // // Initialize layers - Usar las capas del mapa en lugar de crear nuevas
+  // initializeLayers = async (): Promise<void> => {
+  //   const { jimuMapView } = this.state;
+  //   const { config } = this.props;
+
+  //   if (!jimuMapView) return;
+
+  //   this.setState({ isLoading: true });
+
+  //   try {
+  //     // Create graphics layer for search results
+  //     let graphicsLayer = jimuMapView.view.map.findLayerById('sigi-search-graphics') as GraphicsLayer;
+  //     if (!graphicsLayer) {
+  //       graphicsLayer = new GraphicsLayer({
+  //         id: 'sigi-search-graphics',
+  //         title: 'Resultados de Búsqueda SIGI',
+  //         listMode: 'hide'
+  //       });
+  //       jimuMapView.view.map.add(graphicsLayer);
+  //     }
+
+  //     // Buscar las capas en el mapa existente
+  //     const allLayers = jimuMapView.view.map.allLayers;
+  //     console.log('[SIGI Search] All layers in map:', allLayers.map(l => ({
+  //       id: l.id,
+  //       title: l.title,
+  //       type: l.type,
+  //       url: (l as any).url
+  //     })).toArray());
+
+  //     let proyectosLayer: FeatureLayer | null = null;
+  //     let localidadesLayer: FeatureLayer | null = null;
+
+  //     // 1. Intentar usar URLs de configuración si están disponibles
+  //     if (config?.proyectosLayerUrl) {
+  //       const matchingLayer = allLayers.find((l: any) =>
+  //         l.type === 'feature' && l.url && l.url.includes(config.proyectosLayerUrl)
+  //       );
+  //       if (matchingLayer) {
+  //         proyectosLayer = matchingLayer as FeatureLayer;
+  //         console.log('[SIGI Search] Found proyectos layer from config URL:', proyectosLayer.title);
+  //       }
+  //     }
+
+  //     if (config?.localidadesLayerUrl) {
+  //       const matchingLayer = allLayers.find((l: any) =>
+  //         l.type === 'feature' && l.url && l.url.includes(config.localidadesLayerUrl)
+  //       );
+  //       if (matchingLayer) {
+  //         localidadesLayer = matchingLayer as FeatureLayer;
+  //         console.log('[SIGI Search] Found localidades layer from config URL:', localidadesLayer.title);
+  //       }
+  //     }
+
+  //     // 2. Buscar por título o palabras clave
+  //     if (!proyectosLayer || !localidadesLayer) {
+  //       allLayers.forEach((layer: any) => {
+  //         if (layer.type === 'feature') {
+  //           const title = (layer.title || '').toLowerCase();
+  //           const url = (layer.url || '').toLowerCase();
+  //           const layerId = (layer.id || '').toLowerCase();
+
+  //           // Identificar capa de proyectos
+  //           if (!proyectosLayer && (
+  //             title.includes('proyecto') ||
+  //             title.includes('sigi') ||
+  //             title.includes('eaab') ||
+  //             title.includes('alcantarillado') ||
+  //             layerId.includes('proyecto') ||
+  //             (url && (url.includes('featureserver/0') || url.endsWith('/0')))
+  //           )) {
+  //             proyectosLayer = layer as FeatureLayer;
+  //             console.log('[SIGI Search] Found proyectos layer by keyword:', layer.title);
+  //           }
+
+  //           // Identificar capa de localidades
+  //           if (!localidadesLayer && (
+  //             title.includes('localidad') ||
+  //             title.includes('localidades') ||
+  //             layerId.includes('localidad') ||
+  //             (url && (url.includes('featureserver/1') || url.endsWith('/1')))
+  //           )) {
+  //             localidadesLayer = layer as FeatureLayer;
+  //             console.log('[SIGI Search] Found localidades layer by keyword:', layer.title);
+  //           }
+  //         }
+  //       });
+  //     }
+
+  //     // 3. Buscar por campos característicos
+  //     if (!proyectosLayer) {
+  //       const featureLayers = allLayers.filter((l: any) => l.type === 'feature').toArray();
+  //       for (const layer of featureLayers) {
+  //         const fl = layer as FeatureLayer;
+  //         if (fl.fields) {
+  //           const fieldNames = fl.fields.map(f => f.name.toUpperCase());
+  //           // Si tiene campos típicos de proyectos
+  //           if (fieldNames.includes('COD_PROYEC') ||
+  //             fieldNames.includes('NOM_PROYEC') ||
+  //             fieldNames.includes('CODIGO_PROYECTO')) {
+  //             proyectosLayer = fl;
+  //             console.log('[SIGI Search] Found proyectos layer by fields:', fl.title);
+  //             break;
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     // 4. Como último recurso, usar las primeras capas feature
+  //     if (!proyectosLayer) {
+  //       const featureLayers = allLayers.filter((l: any) => l.type === 'feature').toArray();
+  //       if (featureLayers.length > 0) {
+  //         proyectosLayer = featureLayers[0] as FeatureLayer;
+  //         console.log('[SIGI Search] Using first feature layer as proyectos:', proyectosLayer.title);
+  //       }
+  //       if (featureLayers.length > 1 && !localidadesLayer) {
+  //         localidadesLayer = featureLayers[1] as FeatureLayer;
+  //         console.log('[SIGI Search] Using second feature layer as localidades:', localidadesLayer.title);
+  //       }
+  //     }
+
+  //     // Log de campos disponibles
+  //     if (proyectosLayer) {
+  //       console.log('[SIGI Search] Proyectos layer fields:', proyectosLayer.fields?.map(f => ({
+  //         name: f.name,
+  //         alias: f.alias,
+  //         type: f.type
+  //       })));
+  //     }
+  //     if (localidadesLayer) {
+  //       console.log('[SIGI Search] Localidades layer fields:', localidadesLayer.fields?.map(f => ({
+  //         name: f.name,
+  //         alias: f.alias,
+  //         type: f.type
+  //       })));
+  //     }
+
+  //     this.setState({
+  //       proyectosLayer,
+  //       localidadesLayer,
+  //       graphicsLayer
+  //     }, () => {
+  //       if (proyectosLayer) {
+  //         this.loadAllFeatures();
+  //       } else {
+  //         console.warn('[SIGI Search] No proyectos layer found');
+  //         this.setState({ isLoading: false });
+  //       }
+  //       if (localidadesLayer) {
+  //         this.loadLocalidades();
+  //       } else {
+  //         console.warn('[SIGI Search] No localidades layer found - localidades filter will not be available');
+  //       }
+  //     });
+
+  //   } catch (error) {
+  //     console.error('[SIGI Search] Error initializing layers:', error);
+  //     this.setState({ isLoading: false });
+  //   }
+  // };
+
   initializeLayers = async (): Promise<void> => {
+
     const { jimuMapView } = this.state;
     const { config } = this.props;
 
@@ -569,8 +730,9 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
     this.setState({ isLoading: true });
 
     try {
-      // Create graphics layer for search results
+
       let graphicsLayer = jimuMapView.view.map.findLayerById('sigi-search-graphics') as GraphicsLayer;
+
       if (!graphicsLayer) {
         graphicsLayer = new GraphicsLayer({
           id: 'sigi-search-graphics',
@@ -580,143 +742,124 @@ export default class SigiSearchPanel extends React.PureComponent<AllWidgetProps<
         jimuMapView.view.map.add(graphicsLayer);
       }
 
-      // Buscar las capas en el mapa existente
       const allLayers = jimuMapView.view.map.allLayers;
-      console.log('[SIGI Search] All layers in map:', allLayers.map(l => ({
-        id: l.id,
-        title: l.title,
-        type: l.type,
-        url: (l as any).url
-      })).toArray());
+
+      console.log('[SIGI Search] All layers in map:',
+        allLayers.map(l => ({
+          id: l.id,
+          title: l.title,
+          type: l.type,
+          url: (l as any).url
+        })).toArray()
+      );
 
       let proyectosLayer: FeatureLayer | null = null;
       let localidadesLayer: FeatureLayer | null = null;
 
-      // 1. Intentar usar URLs de configuración si están disponibles
-      if (config?.proyectosLayerUrl) {
-        const matchingLayer = allLayers.find((l: any) =>
-          l.type === 'feature' && l.url && l.url.includes(config.proyectosLayerUrl)
-        );
-        if (matchingLayer) {
-          proyectosLayer = matchingLayer as FeatureLayer;
-          console.log('[SIGI Search] Found proyectos layer from config URL:', proyectosLayer.title);
-        }
-      }
+      //------------------------------------------------
+      // 1️⃣ FORZAR CAPA SIGI /MapServer/2
+      //------------------------------------------------
+
+      const SIGI_LAYER_URL =
+        "https://www.acueducto.com.co/sigueserverpublish/rest/services/SIGI/SIGI_PRD_2025/MapServer/2";
+
+      proyectosLayer = new FeatureLayer({
+        url: SIGI_LAYER_URL,
+        outFields: ["*"]
+      });
+
+      console.log("[SIGI Search] Using forced proyectos layer:", SIGI_LAYER_URL);
+
+      //------------------------------------------------
+      // 2️⃣ LOCALIDADES (mantener lógica original)
+      //------------------------------------------------
 
       if (config?.localidadesLayerUrl) {
+
         const matchingLayer = allLayers.find((l: any) =>
-          l.type === 'feature' && l.url && l.url.includes(config.localidadesLayerUrl)
+          l.type === 'feature' &&
+          l.url &&
+          l.url.includes(config.localidadesLayerUrl)
         );
+
         if (matchingLayer) {
           localidadesLayer = matchingLayer as FeatureLayer;
           console.log('[SIGI Search] Found localidades layer from config URL:', localidadesLayer.title);
         }
       }
 
-      // 2. Buscar por título o palabras clave
-      if (!proyectosLayer || !localidadesLayer) {
+      //------------------------------------------------
+      // 3️⃣ FALLBACK LOCALIDADES
+      //------------------------------------------------
+
+      if (!localidadesLayer) {
+
         allLayers.forEach((layer: any) => {
+
           if (layer.type === 'feature') {
+
             const title = (layer.title || '').toLowerCase();
-            const url = (layer.url || '').toLowerCase();
             const layerId = (layer.id || '').toLowerCase();
 
-            // Identificar capa de proyectos
-            if (!proyectosLayer && (
-              title.includes('proyecto') ||
-              title.includes('sigi') ||
-              title.includes('eaab') ||
-              title.includes('alcantarillado') ||
-              layerId.includes('proyecto') ||
-              (url && (url.includes('featureserver/0') || url.endsWith('/0')))
-            )) {
-              proyectosLayer = layer as FeatureLayer;
-              console.log('[SIGI Search] Found proyectos layer by keyword:', layer.title);
-            }
-
-            // Identificar capa de localidades
-            if (!localidadesLayer && (
+            if (
               title.includes('localidad') ||
               title.includes('localidades') ||
-              layerId.includes('localidad') ||
-              (url && (url.includes('featureserver/1') || url.endsWith('/1')))
-            )) {
+              layerId.includes('localidad')
+            ) {
               localidadesLayer = layer as FeatureLayer;
-              console.log('[SIGI Search] Found localidades layer by keyword:', layer.title);
             }
+
           }
+
         });
+
       }
 
-      // 3. Buscar por campos característicos
-      if (!proyectosLayer) {
-        const featureLayers = allLayers.filter((l: any) => l.type === 'feature').toArray();
-        for (const layer of featureLayers) {
-          const fl = layer as FeatureLayer;
-          if (fl.fields) {
-            const fieldNames = fl.fields.map(f => f.name.toUpperCase());
-            // Si tiene campos típicos de proyectos
-            if (fieldNames.includes('COD_PROYEC') ||
-              fieldNames.includes('NOM_PROYEC') ||
-              fieldNames.includes('CODIGO_PROYECTO')) {
-              proyectosLayer = fl;
-              console.log('[SIGI Search] Found proyectos layer by fields:', fl.title);
-              break;
-            }
-          }
-        }
-      }
+      //------------------------------------------------
+      // DEBUG CAMPOS
+      //------------------------------------------------
 
-      // 4. Como último recurso, usar las primeras capas feature
-      if (!proyectosLayer) {
-        const featureLayers = allLayers.filter((l: any) => l.type === 'feature').toArray();
-        if (featureLayers.length > 0) {
-          proyectosLayer = featureLayers[0] as FeatureLayer;
-          console.log('[SIGI Search] Using first feature layer as proyectos:', proyectosLayer.title);
-        }
-        if (featureLayers.length > 1 && !localidadesLayer) {
-          localidadesLayer = featureLayers[1] as FeatureLayer;
-          console.log('[SIGI Search] Using second feature layer as localidades:', localidadesLayer.title);
-        }
-      }
+      await proyectosLayer.load();
 
-      // Log de campos disponibles
-      if (proyectosLayer) {
-        console.log('[SIGI Search] Proyectos layer fields:', proyectosLayer.fields?.map(f => ({
+      console.log('[SIGI Search] Proyectos layer fields:',
+        proyectosLayer.fields?.map(f => ({
           name: f.name,
           alias: f.alias,
           type: f.type
-        })));
-      }
-      if (localidadesLayer) {
-        console.log('[SIGI Search] Localidades layer fields:', localidadesLayer.fields?.map(f => ({
-          name: f.name,
-          alias: f.alias,
-          type: f.type
-        })));
-      }
+        }))
+      );
+
+      //------------------------------------------------
+      // SET STATE
+      //------------------------------------------------
 
       this.setState({
         proyectosLayer,
         localidadesLayer,
         graphicsLayer
       }, () => {
+
         if (proyectosLayer) {
           this.loadAllFeatures();
         } else {
           console.warn('[SIGI Search] No proyectos layer found');
           this.setState({ isLoading: false });
         }
+
         if (localidadesLayer) {
           this.loadLocalidades();
         } else {
-          console.warn('[SIGI Search] No localidades layer found - localidades filter will not be available');
+          console.warn('[SIGI Search] No localidades layer found');
         }
+
       });
 
-    } catch (error) {
+    }
+    catch (error) {
+
       console.error('[SIGI Search] Error initializing layers:', error);
       this.setState({ isLoading: false });
+
     }
   };
 

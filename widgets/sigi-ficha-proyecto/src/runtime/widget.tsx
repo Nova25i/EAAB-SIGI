@@ -6,7 +6,6 @@ import { type IMConfig } from '../config';
 // ArcGIS imports
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import Query from '@arcgis/core/rest/support/Query';
-import RelationshipQuery from '@arcgis/core/rest/support/RelationshipQuery';
 import * as query from '@arcgis/core/rest/query';
 
 interface ProjectData {
@@ -111,7 +110,9 @@ const formatDecimal = (value: number | undefined | null, min = 1, max = 1): stri
 // Styles basados exactamente en el estilo del PopUpAcueducto original
 const widgetStyles = css`
   .pop-up-acueducto {
-    font-family: 'Montserrat', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    overflow-x: hidden;
   }
 
   /* Modal styles */
@@ -135,48 +136,57 @@ const widgetStyles = css`
 
   .modal-dialog {
     width: 900px;
-    height: 635px;
+    height: 720px;
     margin-top: 10px;
     margin-bottom: 10px;
     position: relative !important;
     z-index: 2147483647 !important;
     isolation: isolate;
     transform: translate3d(0, 0, 0);
+    overflow: hidden;
   }
 
   .modal-content {
     background-color: #fff;
-    border: 1px solid #0082dcff;
+    border: 1px solid #0082DC;
     border-radius: 0px;
     height: 100%;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    overflow: hidden;
   }
 
   .modal-header {
-    background-color: #0082dcff;
-    padding: 15px 20px;
+    background-color: #0082DC;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: none;
   }
 
   .modal-title {
-    color: #ffff;
-    font-size: 24px;
-    font-weight: bold;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 900;
     margin: 0;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
   }
 
   .close {
-    font-size: 30px;
+    font-size: 32px;
     color: #fff;
     background: none;
     border: none;
     cursor: pointer;
-    opacity: 0.5;
+    opacity: 0.6;
     line-height: 1;
     padding: 0;
+    width: 32px;
+    height: 32px;
+    font-weight: 300;
   }
 
   .close:hover, .close:focus {
@@ -185,19 +195,22 @@ const widgetStyles = css`
 
   .modal-title-secondary {
     text-align: center;
-    color: #0082dcff;
-    font-size: 15px;
-    padding: 10px 20px;
+    color: #0082DC;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 12px 20px;
     margin: 0;
     background-color: #fff;
+    border-bottom: 1px solid #e5e5e5;
   }
 
   .modal-body {
-    padding: 10px;
-    padding-top: 10px;
+    padding: 0px;
+    padding-top: 0px;
     padding-bottom: 0px;
-    height: calc(100% - 67px);
+    height: calc(100% - 95px);
     overflow: hidden;
+    width: 100%;
   }
 
   /* Tabs */
@@ -205,78 +218,98 @@ const widgetStyles = css`
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    width: 100%;
   }
 
   .tab-headers {
     display: flex;
-    border-bottom: 2px solid #0082dcff;
+    border-bottom: none;
+    background-color: #f5f5f5;
   }
 
   .tab-header {
     flex: 1;
     padding: 12px 20px;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     border: none;
+    border-right: 1px solid #c0c0c0;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
-    font-weight: bolder;
-    font-family: 'Montserrat-Bold', sans-serif;
-    color: #0082dcff;
-    font-size: 13px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #0082DC;
+    font-size: 12px;
     text-transform: uppercase;
-    transition: all 0.2s;
+    transition: none;
+    position: relative;
   }
 
-  .tab-header:hover {
-    background-color: #e9e9e9;
+  .tab-header:last-child {
+    border-right: none;
   }
 
   .tab-header.active {
-    background-color: #F2F2F2;
-    color: #0082dcff;
+    background-color: #DCDCDCDC;
+    color: #0082DC;
+    border-bottom: 2px solid #0082DC;
+  }
+
+  .tab-header.active:hover {
+    background-color: #e9e9e9;
   }
 
   .tab-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   .detail-tab-container {
-    padding: 10px;
+    padding: 15px;
     background-color: #F2F2F2;
     min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   /* Text styles */
   .text-primary {
     text-transform: uppercase;
-    font-weight: bolder;
-    font-family: 'Montserrat-Bold', sans-serif;
-    line-height: 1;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.4;
     padding: 0px;
-    color: #0082dcff;
-  }
-
-  .text-primary-minus {
-    font-weight: bolder;
-    line-height: 1;
-    padding: 0px;
-    color: #0082dcff;
-  }
-
-  .text-value {
-    line-height: 1;
-    padding: 2px;
-    color: #0082dcff;
+    color: #0082DC;
     font-size: 12px;
   }
 
+  .text-primary-minus {
+    font-weight: bold;
+    line-height: 1.4;
+    padding: 0px;
+    color: #0082DC;
+    font-size: 12px;
+  }
+
+  .text-value {
+    line-height: 1.4;
+    padding: 2px;
+    color: #0082DC;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
   .text-info {
-    color: #0082dcff;
+    color: #0082DC;
   }
 
   .text-note {
     color: #818181;
-    font-size: 9px;
+    font-size: 10px;
+    line-height: 1.3;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .text-danger {
@@ -289,53 +322,78 @@ const widgetStyles = css`
 
   .cell {
     text-transform: uppercase;
-    line-height: 1;
+    line-height: 1.4;
   }
 
   /* Descripción Tab */
   .descripcion {
     display: flex;
     height: 100%;
+    gap: 15px;
+    overflow-x: hidden;
   }
 
   .descripcion .col-left {
     flex: 0 0 40%;
     padding-right: 10px;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .descripcion .col-right {
     flex: 1;
     padding-left: 10px;
+    overflow-x: hidden;
+    max-width: 60%;
   }
 
   .descripcion .objetivo-container {
-    height: 327px;
-    overflow-y: scroll;
-    margin-bottom: 10px;
+    overflow-y: visible;
+    overflow-x: hidden;
+    margin-bottom: 15px;
+    padding: 2px;
+    word-wrap: break-word;
   }
 
   .descripcion .objetivo-container b {
     display: block;
     margin-bottom: 10px;
+    color: #000000;
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+  .descripcion .objetivo-container div {
+    text-align: justify;
+    color: #000000;
+    font-size: 12px;
+    line-height: 1.5;
   }
 
   .descripcion .info-table {
-    padding-left: 15px;
-    margin-bottom: 10px;
+    padding-left: 0px;
+    margin-bottom: 6px;
   }
 
   .descripcion .info-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 5px;
+    padding: 0;
+    font-size: 12px;
   }
 
   .card-results {
     background-color: white;
-    padding: 10px;
+    padding: 12px;
     margin: 0px;
     margin-top: 0px;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .inversion-descripcion-icon {
@@ -344,6 +402,8 @@ const widgetStyles = css`
     flex-wrap: wrap;
     vertical-align: middle;
     align-content: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
   .inversion-descripcion-icon img {
@@ -353,15 +413,18 @@ const widgetStyles = css`
   }
 
   .project-image-container {
-    margin-top: 10px;
+    margin-top: 12px;
     text-align: center;
-    height: 252px;
+    height: 245px;
     overflow-y: auto;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   .project-image-container img {
-    max-width: 99%;
-    margin-left: 5px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
   }
 
   /* Project Progress / Detalle Tab */
@@ -373,51 +436,60 @@ const widgetStyles = css`
   }
 
   .project-progress .container-progress {
-    background-color: #c8c8c8;
-    border: 1px solid #989898;
-    padding: 1px;
-    width: 80%;
+    background-color: #d3d3d3;
+    border: 1px solid #999999;
+    padding: 0px;
+    width: 100%;
     height: 18px;
+    border-radius: 2px;
   }
 
   .project-progress .percent {
-    padding: 1px;
+    padding: 0px;
     text-align: right;
     height: 100%;
+    border-radius: 2px;
   }
 
   .detalle-layout {
     display: flex;
     height: 100%;
+    gap: 15px;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   .detalle-sidebar {
-    flex: 0 0 25%;
+    flex: 0 0 22%;
     height: 433px;
+    overflow: hidden;
   }
 
   .detalle-content {
     flex: 1;
-    padding-left: 10px;
+    padding-left: 0px;
+    overflow: hidden;
+    max-width: 78%;
   }
 
   .detalle-content-scroll {
-    height: 415px;
+    height: 410px;
     width: calc(100% - 5px);
-    overflow-y: scroll;
+    overflow-y: auto;
     padding-right: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .inversion-detalle-icon {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     position: relative;
   }
 
   .fase-button-container {
     display: flex;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    align-items: center;
   }
 
   .fase-icon-column {
@@ -436,64 +508,82 @@ const widgetStyles = css`
     position: relative;
     left: 50%;
     transform: translate(-50%, 0%);
+    display: block;
   }
 
   .inversion-detalle-indicador-img {
     position: relative;
     left: 50%;
-    top: 25px;
+    top: 0px;
     transform: translate(-50%, 0%);
+    display: block;
   }
 
   .card-pep {
     background-color: #FFF;
     padding: 15px;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-bottom: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-bottom: 12px;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    overflow: hidden;
+    word-wrap: break-word;
   }
 
   .card-pep:first-child {
-    margin-top: 10px;
+    margin-top: 0px;
   }
 
   .card-pep table {
     width: 100%;
+    border-spacing: 0;
+    table-layout: fixed;
   }
 
   .card-pep table tr {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+  }
+
+  .card-pep table td {
+    padding: 3px 0;
   }
 
   .card-pep .contract-layout {
     display: flex;
-    gap: 20px;
+    gap: 25px;
+    margin-top: 12px;
+    overflow: hidden;
   }
 
   .contract-info {
     flex: 1;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .contract-progress-section {
     flex: 1;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .progress-row {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    gap: 8px;
   }
 
   .progress-label-col {
-    flex: 0 0 25%;
+    flex: 0 0 20%;
     text-align: right;
     padding-right: 5px;
   }
 
   .progress-bar-col {
     flex: 1;
-    padding-left: 5px;
+    padding-left: 0px;
   }
 
   .no-padding {
@@ -509,9 +599,10 @@ const widgetStyles = css`
     display: inline-block;
     text-align: right;
     padding: 15px;
+    padding-top: 10px;
     width: 75%;
     background-color: white;
-    font-size: smaller;
+    font-size: 12px;
   }
 
   .population-table {
@@ -523,34 +614,43 @@ const widgetStyles = css`
     flex-direction: column;
     align-items: center;
     height: 485px;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   .poblacion-card-outer {
     display: flex;
     justify-content: center;
     width: 100%;
+    overflow-x: hidden;
   }
 
   .poblacion-card-inner {
     flex: 0 0 66%;
+    overflow-x: hidden;
+    max-width: 66%;
   }
 
   .poblacion-main-card {
     background-color: #FFF;
-    padding: 30px 15px 10px;
+    padding: 30px 15px 15px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
   }
 
   .poblacion-note-container {
     text-align: justify;
-    padding: 5px;
+    padding: 8px;
     font-size: 11px;
     color: #818181;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow: hidden;
   }
 
   h3 {
-    line-height: 1;
+    line-height: 1.4;
     font-weight: 100;
     font-size: 15px;
     margin-top: 10px;
@@ -558,7 +658,7 @@ const widgetStyles = css`
   }
 
   .font-large {
-    font-size: large;
+    font-size: 14px;
   }
 
   .small.text-muted {
@@ -572,6 +672,8 @@ const widgetStyles = css`
     justify-content: center;
     align-items: center;
     height: 200px;
+    font-size: 14px;
+    color: #666;
   }
 `;
 
@@ -785,55 +887,125 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
       const imageCode = attributes[config.CampoImagenElementoPep] || attributes.COD_PROYEC;
       const projectImageUrl = config.TemplateImagen.replace('{0}', imageCode);
 
-      // Query related PEP elements (relationship ID 1)
-      const relatedPEPS = new RelationshipQuery({
-        outFields: ['*'],
-        relationshipId: 1,
-        objectIds: [attributes.OBJECTID],
-        returnGeometry: false
-      });
-
+      // Query PEP elements from table directly using COD_PROYEC
       let pepFeatures: any[] = [];
-      const pepResult = await layer.queryRelatedFeatures(relatedPEPS);
-      if (pepResult && pepResult[attributes.OBJECTID] && pepResult[attributes.OBJECTID]?.features) {
-        pepFeatures = pepResult[attributes.OBJECTID].features;
-      }
-
-      // Query related contracts (relationship ID 2)
-      const relatedContratos = new RelationshipQuery({
-        outFields: ['*'],
-        relationshipId: 2,
-        objectIds: [attributes.OBJECTID],
-        returnGeometry: false
-      });
-
       let contratosFeatures: any[] = [];
-      const contratosResult = await layer.queryRelatedFeatures(relatedContratos);
-      if (contratosResult && contratosResult[attributes.OBJECTID] && contratosResult[attributes.OBJECTID]?.features) {
-        contratosFeatures = contratosResult[attributes.OBJECTID].features;
+
+      // Build PEP table URL from map layer or config
+      let pepTableUrl = '';
+      if (this.state.jimuMapView) {
+        const allLayers = this.state.jimuMapView.view.map.allLayers;
+        console.log('🔷 All layers in map:');
+        
+        // Find a layer with "proyecto" or "sigi" in the title, or that looks like the main project layer
+        for (let i = 0; i < allLayers.length; i++) {
+          const layer = allLayers.getItemAt(i);
+          if ((layer as any).url) {
+            const layerUrl = (layer as any).url;
+            console.log(`  - Layer ${i}:`, layerUrl);
+            
+            // Check if it matches the expected pattern
+            if (layerUrl.includes('proyecto') || layerUrl.includes('SIGI')) {
+              
+              // Extract base URL (everything before the last /)
+              const lastSlashIndex = layerUrl.lastIndexOf('/');
+              let baseUrl = layerUrl.substring(0, lastSlashIndex);
+              
+              // Ensure baseUrl ends with MapServer or FeatureServer
+              // If the URL doesn't have MapServer/FeatureServer, add MapServer
+              if (!baseUrl.includes('MapServer') && !baseUrl.includes('FeatureServer')) {
+                // URL might be like: .../SIGI_PRD_2025/2
+                // We need: .../SIGI_PRD_2025/MapServer/5
+                // Add MapServer before the layer index
+                baseUrl = `${baseUrl}/MapServer`;
+                console.log('🔷 Added MapServer to base URL:', baseUrl);
+              }
+              
+              pepTableUrl = `${baseUrl}/5`;
+              console.log('🔷 Constructed PEP table URL from layer:', pepTableUrl);
+              break;
+            }
+          }
+        }
+      }
+      
+      // Fallback to config if URL couldn't be constructed from layers
+      if (!pepTableUrl && config.TablaElementosPEP) {
+        pepTableUrl = config.TablaElementosPEP;
+        console.log('🔷 Using PEP table URL from config:', pepTableUrl);
       }
 
-      // Merge PEP and contracts data
-      const mergedContracts = this.mergeFeatures(pepFeatures, contratosFeatures);
+      if (pepTableUrl) {
+        try {
+          console.log('🔷 Querying PEP table:', pepTableUrl);
+          console.log('🔷 For project:', attributes.COD_PROYEC);
+
+          const pepQuery = new Query({
+            where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
+            outFields: ['*'],
+            returnGeometry: false
+          });
+
+          const pepResult = await query.executeQueryJSON(pepTableUrl, pepQuery);
+          console.log('🔷 PEP query result:', pepResult);
+
+          if (pepResult.features && pepResult.features.length > 0) {
+            pepFeatures = pepResult.features.map((f: any) => ({ attributes: f.attributes }));
+            console.log('🔷 Found PEP features:', pepFeatures.length);
+          } else {
+            console.log('🔷 No PEP features found');
+          }
+        } catch (error) {
+          console.error('❌ Error querying PEP table:', error);
+        }
+      } else {
+        console.warn('⚠️ No PEP table URL available (neither from map layers nor from config)');
+      }
+
+      // For contracts, use the PEP features we already have
+      // They already contain contract information
+      const mergedContracts = pepFeatures.map(f => f.attributes);
 
       // Query population data from table
       let populationData: any[] = [];
-      if (config.TablaPoblacional && this.state.jimuMapView) {
-        try {
-          const tableUrl = config.TablaPoblacional;
+      
+      // Build population table URL from map layer or config
+      let populationTableUrl = '';
+      if (this.state.jimuMapView && pepTableUrl) {
+        // If we got PEP URL successfully, try to construct population table URL
+        // Assuming population table is at index 6 or 7 (adjust if needed)
+        const baseUrl = pepTableUrl.substring(0, pepTableUrl.lastIndexOf('/'));
+        // Try index 6 first (common pattern: projects=2, pep=5, population=6)
+        populationTableUrl = `${baseUrl}/6`;
+        console.log('🔷 Constructed population table URL:', populationTableUrl);
+      }
+      
+      // Fallback to config if URL couldn't be constructed
+      if (!populationTableUrl && config.TablaPoblacional) {
+        populationTableUrl = config.TablaPoblacional;
+        console.log('🔷 Using population table URL from config:', populationTableUrl);
+      }
 
+      if (populationTableUrl && this.state.jimuMapView) {
+        try {
           const qPopulation = new Query({
             where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
             outFields: ['*'],
             returnGeometry: false
           });
 
-          const populationResult = await query.executeQueryJSON(tableUrl, qPopulation);
+          const populationResult = await query.executeQueryJSON(populationTableUrl, qPopulation);
+          console.log('🔷 Population query result:', populationResult);
+          
           if (populationResult.features && populationResult.features.length > 0) {
             populationData = populationResult.features.map((f: any) => f.attributes);
+            console.log('🔷 Found population features:', populationData.length);
+          } else {
+            console.log('🔷 No population features found');
           }
         } catch (error) {
-          console.warn('Error querying population data:', error);
+          console.warn('⚠️ Error querying population data:', error);
+          console.log('💡 Tip: If this table index is wrong, check your MapServer layers and update the index in widget.tsx');
         }
       }
 
@@ -848,37 +1020,6 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
       console.error('Error loading project data:', error);
       this.setState({ isLoading: false });
     }
-  };
-
-  // Merge PEP features with contracts features
-  mergeFeatures = (pepFeatures: any[], contratosFeatures: any[]): ContractData[] => {
-    return pepFeatures.map(pepFeature => {
-      const pepAttrs = pepFeature.attributes;
-      const contratoFeature = contratosFeatures.find(
-        contrato => contrato.attributes['NUM_CONTRATO'] === pepAttrs['NUMERO_CONTRATO']
-      );
-
-      if (contratoFeature) {
-        const contratoAttrs = contratoFeature.attributes;
-        return {
-          ...pepAttrs,
-          OBJETO_CONT: contratoAttrs['OBJETO_CONTRATO'] || pepAttrs['OBJETO_CONTRATO'],
-          FECHA_FIN_CONT: contratoAttrs['FECHA_FIN_CONT'] || pepAttrs['FECHA_FIN'],
-          FECHA_INI_CONT: contratoAttrs['FECHA_INI_CONT'] || pepAttrs['FECHA_INICIO'],
-          FECHA_LIQ_CONT: contratoAttrs['FECHA_LIQ_CONT'] || pepAttrs['FECHA_LIQ'],
-          FECHA_POS_FIN_CONT: contratoAttrs['FECHA_POS_FIN_CONT'] || pepAttrs['FECHA_POS_FIN']
-        };
-      } else {
-        return {
-          ...pepAttrs,
-          OBJETO_CONT: pepAttrs['OBJETO_CONTRATO'],
-          FECHA_FIN_CONT: pepAttrs['FECHA_FIN'],
-          FECHA_INI_CONT: pepAttrs['FECHA_INICIO'],
-          FECHA_LIQ_CONT: pepAttrs['FECHA_LIQ'],
-          FECHA_POS_FIN_CONT: pepAttrs['FECHA_POS_FIN']
-        };
-      }
-    });
   };
 
   // Close modal
@@ -1038,10 +1179,10 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
     return (
       <div className="card-pep" key={contract.NUMERO_CONTRATO}>
         <div>
-          <label className="cell text-primary" style={{ fontWeight: 'bold' }}>
+          <label className="cell text-primary" style={{ fontWeight: 'bold', fontSize: '13px' }}>
             Contrato de {contract.ACTIVIDAD} No. {contract.NUMERO_CONTRATO}
           </label>
-          <p className="text-value" style={{ color: '#818181' }}>
+          <p className="text-value" style={{ color: '#666666', margin: '8px 0', fontSize: '12px', lineHeight: '1.4' }}>
             {contract.OBJETO_CONT}
           </p>
           <div className="contract-layout">
@@ -1049,34 +1190,34 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
               <table style={{ width: '100%' }}>
                 <tbody>
                   <tr>
-                    <td className="text-primary">Inversión</td>
-                    <td className="text-primary">{formatMoney(contract.VALOR_CONTRATO)}</td>
+                    <td className="text-primary" style={{ width: '50%' }}>Inversión</td>
+                    <td className="text-primary" style={{ textAlign: 'left' }}>{formatMoney(contract.VALOR_CONTRATO)}</td>
                   </tr>
                   <tr>
-                    <td className="text-value">Fecha de Inicio</td>
-                    <td className="text-value">{formatLongDate(contract.FECHA_INI_CONT)}</td>
+                    <td className="text-value" style={{ width: '50%' }}>Fecha de Inicio</td>
+                    <td className="text-value" style={{ textAlign: 'left' }}>{formatLongDate(contract.FECHA_INI_CONT)}</td>
                   </tr>
                   <tr>
-                    <td className="text-value">{labelFechaFin}</td>
-                    <td className="text-value">{fechaFin}</td>
+                    <td className="text-value" style={{ width: '50%' }}>{labelFechaFin}</td>
+                    <td className="text-value" style={{ textAlign: 'left' }}>{fechaFin}</td>
                   </tr>
                   <tr>
-                    <td className="text-value">Estado</td>
-                    <td className="text-value">{contract.ESTADO_CONTRATO}</td>
+                    <td className="text-value" style={{ width: '50%' }}>Estado</td>
+                    <td className="text-value" style={{ textAlign: 'left' }}>{contract.ESTADO_CONTRATO}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div className="contract-progress-section">
-              <div style={{ marginBottom: '5px' }}>
+              <div style={{ marginBottom: '10px' }}>
                 <div className="text-right-aligned">
-                  <span className="cell text-value">AVANCE FÍSICO</span>
+                  <span className="cell text-value" style={{ fontWeight: 'bold' }}>AVANCE FÍSICO</span>
                 </div>
                 {physicalProgress}
               </div>
-              <div style={{ marginTop: '5px' }}>
+              <div style={{ marginTop: '10px' }}>
                 <div className="text-right-aligned">
-                  <span className="cell text-value">AVANCE FINANCIERO</span>
+                  <span className="cell text-value" style={{ fontWeight: 'bold' }}>AVANCE FINANCIERO</span>
                 </div>
                 {financialProgress}
               </div>
@@ -1111,103 +1252,102 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
         <div className="col-left">
           <div className="objetivo-container">
             <b>OBJETIVO</b>
-            <div style={{ paddingTop: '10px' }}>
+            <div style={{ paddingTop: '5px' }}>
               {projectData.ALC_PROYEC || 'Sin descripción disponible'}
             </div>
           </div>
 
-          <div className="info-table">
-            <div className="info-row">
-              <div className="text-primary">INVERSIÓN</div>
-              <div className="text-primary">{formatMoney(projectData.VALOR_TOTAL)}</div>
+          <div>
+            <div className="info-table">
+              <div className="info-row">
+                <div className="text-primary" style={{ fontWeight: 'bold' }}>INVERSIÓN</div>
+                <div className="text-primary" style={{ fontWeight: 'bold' }}>{formatMoney(projectData.VALOR_TOTAL)}</div>
+              </div>
+              <div className="info-row">
+                <div className="text-value">Fecha de Inicio</div>
+                <div className="text-value">{formatLongDate(projectData.FECHA_INICIO)}</div>
+              </div>
+              <div className="info-row">
+                <div className="text-value">{endDateInfo.label}</div>
+                <div className="text-value">{endDateInfo.value}</div>
+              </div>
+              <div className="info-row">
+                <div className="text-value">Plan de Desarrollo</div>
+                <div className="text-value">{projectData.PDD || '-'}</div>
+              </div>
+              <div className="info-row">
+                <div className="text-value">Macroproyecto</div>
+                <div className="text-value">{projectData.MACROPROY || '-'}</div>
+              </div>
+              <div className="info-row">
+                <div className="text-value">Localidad</div>
+                <div className="text-value">{projectData.LOCALIDAD || '-'}</div>
+              </div>
             </div>
-            <div className="info-row">
-              <div className="text-value">Fecha de Inicio</div>
-              <div className="text-value">{formatLongDate(projectData.FECHA_INICIO)}</div>
-            </div>
-            <div className="info-row">
-              <div className="text-value">{endDateInfo.label}</div>
-              <div className="text-value">{endDateInfo.value}</div>
-            </div>
-            <div className="info-row">
-              <div className="text-value">Plan de Desarrollo</div>
-              <div className="text-value">{projectData.PDD || '-'}</div>
-            </div>
-            <div className="info-row">
-              <div className="text-value">Macroproyecto</div>
-              <div className="text-value">{projectData.MACROPROY || '-'}</div>
-            </div>
-            <div className="info-row">
-              <div className="text-value">Localidad</div>
-              <div className="text-value">{projectData.LOCALIDAD || '-'}</div>
-            </div>
-          </div>
 
-          <div style={{ paddingLeft: '15px', marginBottom: '5px' }}>
-            <span className="text-note">NOTA: El valor de inversión está determinado en Peso Colombiano (COP).</span>
+            <div style={{ marginBottom: '3px', marginTop: '3px' }}>
+              <span className="text-note">NOTA: El valor de inversión está determinado en Peso Colombiano (COP).</span>
+            </div>
           </div>
         </div>
 
         <div className="col-right">
           <div className="card-results">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span className="text-value">ESTADO AVANCE DE INVERSIÓN</span>
-              <span className="text-value">{fase}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+              <span className="text-value" style={{ fontWeight: 'bold', fontSize: '12px' }}>ESTADO AVANCE DE INVERSIÓN</span>
+              <span className="text-value" style={{ fontWeight: 'bold', fontSize: '13px' }}>{fase}</span>
             </div>
 
-            <div style={{ padding: '10px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <div style={{ width: '15%' }}></div>
+            <div style={{ padding: '8px 0 5px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3px' }}>
                 <div
                   className="inversion-descripcion-icon"
-                  style={{ width: '20%', cursor: 'pointer' }}
+                  style={{ width: '22%', cursor: 'pointer', maxWidth: '22%' }}
                   onClick={() => this.setSelectedFase('FASE 1')}
                 >
-                  <img src={imgFase1} height="80px" alt="Fase 1" />
+                  <img src={imgFase1} height="65px" alt="Fase 1" style={{ maxWidth: '100%', height: 'auto', maxHeight: '65px' }} />
                 </div>
-                <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
-                  <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
+                <div className="inversion-descripcion-icon" style={{ width: '8%', maxWidth: '8%' }}>
+                  <img src={this.getImageUrl('IndicadorOff.png')} height="12px" style={{ marginTop: '0px', maxWidth: '100%' }} alt="" />
                 </div>
                 <div
                   className="inversion-descripcion-icon"
-                  style={{ width: '20%', cursor: 'pointer' }}
+                  style={{ width: '22%', cursor: 'pointer', maxWidth: '22%' }}
                   onClick={() => this.setSelectedFase('FASE 2')}
                 >
-                  <img src={imgFase2} height="80px" alt="Fase 2" />
+                  <img src={imgFase2} height="65px" alt="Fase 2" style={{ maxWidth: '100%', height: 'auto', maxHeight: '65px' }} />
                 </div>
-                <div className="inversion-descripcion-icon" style={{ width: '10%' }}>
-                  <img src={this.getImageUrl('IndicadorOff.png')} height="15px" style={{ marginTop: '30px' }} alt="" />
+                <div className="inversion-descripcion-icon" style={{ width: '8%', maxWidth: '8%' }}>
+                  <img src={this.getImageUrl('IndicadorOff.png')} height="12px" style={{ marginTop: '0px', maxWidth: '100%' }} alt="" />
                 </div>
                 <div
                   className="inversion-descripcion-icon"
-                  style={{ width: '20%', cursor: 'pointer' }}
+                  style={{ width: '22%', cursor: 'pointer', maxWidth: '22%' }}
                   onClick={() => this.setSelectedFase('FASE 3')}
                 >
-                  <img src={imgFase3} height="80px" alt="Fase 3" />
+                  <img src={imgFase3} height="65px" alt="Fase 3" style={{ maxWidth: '100%', height: 'auto', maxHeight: '65px' }} />
                 </div>
-                <div style={{ width: '15%' }}></div>
               </div>
             </div>
 
-            <div style={{ padding: '10px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: '20%' }}></div>
+            <div style={{ padding: '3px 0 5px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <div
                   className="inversion-descripcion-icon"
                   style={{
-                    width: '60%',
+                    width: '35%',
                     cursor: hasOtrosCostos ? 'pointer' : 'default',
-                    opacity: hasOtrosCostos ? 1 : 0.4
+                    opacity: hasOtrosCostos ? 1 : 0.4,
+                    maxWidth: '35%'
                   }}
                   onClick={() => hasOtrosCostos && this.setSelectedFase('OTROS COSTOS')}
                 >
-                  <img src={imgOtrosCostos} height="60px" alt="Otros Costos" />
+                  <img src={imgOtrosCostos} height="48px" alt="Otros Costos" style={{ maxWidth: '100%', height: 'auto', maxHeight: '48px' }} />
                 </div>
-                <div style={{ width: '20%' }}></div>
               </div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
               <span className="text-note">
                 NOTA. El estado de avance corresponde a lo ejecutado a la fecha de corte: {fechaCorte}.
               </span>
@@ -1319,16 +1459,16 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                   </React.Fragment>
                 ))
               ) : (
-                <div style={{ textAlign: 'center', width: '95%', marginTop: '20px' }}>
+                <div style={{ textAlign: 'center', width: '100%', marginTop: '20px', color: '#666', fontSize: '12px', lineHeight: '1.5' }}>
                   Para el período comprendido entre junio de 2016 a la fecha de corte,
                   no se han ejecutado recursos por el concepto de Inversiones.
                 </div>
               )}
             </div>
 
-            <div style={{ paddingLeft: '15px', marginBottom: '5px', textAlign: 'right' }}>
-              <div style={{ padding: '0px 10px' }}>
-                <span className="text-note">
+            <div style={{ paddingLeft: '0px', marginBottom: '8px', textAlign: 'right', paddingRight: '5px' }}>
+              <div style={{ padding: '5px 0px' }}>
+                <span className="text-note" style={{ lineHeight: '1.3' }}>
                   NOTA. El valor de inversión está determinado en peso colombiano (COP).
                   <br />
                   El estado de avance corresponde a lo ejecutado a la fecha de corte: {fechaCorte}
@@ -1371,11 +1511,9 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
           <div className="poblacion-card-inner">
             <div className="poblacion-main-card">
               <div className="centered" style={{ width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', paddingBottom: '15px' }}>
-                  <b>
-                    <label className="cell text-primary font-large">Población Beneficiada:</label>
-                  </b>
-                  <span className="text-value font-large">{formatThousands(projectData.POB_BENEFIC)} Personas</span>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', paddingBottom: '18px', alignItems: 'center' }}>
+                  <label className="cell text-primary font-large" style={{ fontWeight: 'bold', margin: 0 }}>Población Beneficiada:</label>
+                  <span className="text-value font-large" style={{ fontWeight: 'normal' }}>{formatThousands(projectData.POB_BENEFIC)} Personas</span>
                 </div>
               </div>
 
@@ -1386,12 +1524,12 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                       const value = popData[key];
                       if (value && value > 0) {
                         return (
-                          <div key={key} style={{ display: 'flex', marginBottom: '5px' }}>
-                            <div style={{ flex: '0 0 60%', textAlign: 'right' }} className="text-value">
-                              {populationLabels[key]} &nbsp;:
+                          <div key={key} style={{ display: 'flex', marginBottom: '6px', alignItems: 'center' }}>
+                            <div style={{ flex: '0 0 60%', textAlign: 'right', paddingRight: '8px' }} className="text-value">
+                              {populationLabels[key]}&nbsp;:
                             </div>
-                            <div style={{ flex: '1', textAlign: 'left' }} className="text-value">
-                              <span>{formatThousands(value)}</span>
+                            <div style={{ flex: '1', textAlign: 'left', paddingLeft: '8px' }} className="text-value">
+                              <span style={{ fontWeight: 'normal' }}>{formatThousands(value)}</span>
                             </div>
                           </div>
                         );
@@ -1400,14 +1538,14 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                     })}
                   </div>
                 ) : (
-                  <div className="text-value" style={{ textAlign: 'center', padding: '20px' }}>
+                  <div className="text-value" style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
                     Datos poblacionales no disponibles
                   </div>
                 )}
               </div>
 
-              <div className="centered text-note">
-                <p>Base de Cálculo: Censo 2018 DANE</p>
+              <div className="centered text-note" style={{ marginTop: '12px' }}>
+                <p style={{ margin: '5px 0' }}>Base de Cálculo: Censo 2018 DANE</p>
               </div>
             </div>
 
@@ -1465,7 +1603,7 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
                 </div>
 
                 <div className="modal-title-secondary">
-                  <h2 style={{ margin: 0, fontSize: '15px' }}>{projectData?.NOM_PROYEC || ''}</h2>
+                  <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', lineHeight: '1.2' }}>{projectData?.NOM_PROYEC || ''}</h2>
                 </div>
 
                 <div className="modal-body">

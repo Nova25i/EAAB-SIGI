@@ -110,13 +110,18 @@ export default function Setting(props: AllWidgetSettingProps<IMConfig>) {
         className="setting-section"
         title="Tablas Relacionadas"
       >
+        <p className="info-text" style={{ fontSize: '12px', color: '#6b6b6b', marginBottom: '10px' }}>
+          ℹ️ Opcional: El widget intentará detectar estas tablas automáticamente desde las capas del mapa. 
+          Solo configure estas URLs si la detección automática falla.
+        </p>
+        
         <SettingRow className="setting-row" flow="wrap" label="Tabla de Elementos PEP (URL completa)">
           <TextInput
             type="text"
             className="input-full"
             value={props.config?.TablaElementosPEP || ''}
             onChange={(e: any) => onConfigChange('TablaElementosPEP', e.target.value)}
-            placeholder="https://servidor/rest/services/.../FeatureServer/1"
+            placeholder="https://servidor/.../MapServer/5 (auto-detectado si vacío)"
           />
         </SettingRow>
 
@@ -126,7 +131,7 @@ export default function Setting(props: AllWidgetSettingProps<IMConfig>) {
             className="input-full"
             value={props.config?.TablaPoblacional || ''}
             onChange={(e: any) => onConfigChange('TablaPoblacional', e.target.value)}
-            placeholder="https://servidor/rest/services/.../FeatureServer/2"
+            placeholder="https://servidor/.../MapServer/6 (auto-detectado si vacío)"
           />
         </SettingRow>
       </SettingSection>

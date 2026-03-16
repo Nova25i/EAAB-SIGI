@@ -7,6 +7,7 @@ import { type IMConfig } from '../config';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import Query from '@arcgis/core/rest/support/Query';
 import * as query from '@arcgis/core/rest/query';
+import RelationshipQuery from '@arcgis/core/rest/support/RelationshipQuery';
 
 interface ProjectData {
   OBJECTID: number;
@@ -887,97 +888,248 @@ export default class SigiFichaProyecto extends React.PureComponent<AllWidgetProp
       const imageCode = attributes[config.CampoImagenElementoPep] || attributes.COD_PROYEC;
       const projectImageUrl = config.TemplateImagen.replace('{0}', imageCode);
 
-      // Query PEP elements from table directly using COD_PROYEC
+      // Query PEP and Contratos data directly from tables using COD_PROYEC
       let pepFeatures: any[] = [];
       let contratosFeatures: any[] = [];
 
-      // Build PEP table URL from map layer or config
+      // Build table URLs from map layer or config
       let pepTableUrl = '';
+      let contratosTableUrl = '';
+      
       if (this.state.jimuMapView) {
         const allLayers = this.state.jimuMapView.view.map.allLayers;
-        console.log('🔷 All layers in map:');
-        
-        // Find a layer with "proyecto" or "sigi" in the title, or that looks like the main project layer
         for (let i = 0; i < allLayers.length; i++) {
-          const layer = allLayers.getItemAt(i);
-          if ((layer as any).url) {
-            const layerUrl = (layer as any).url;
-            console.log(`  - Layer ${i}:`, layerUrl);
-            
-            // Check if it matches the expected pattern
+          const layerItem = allLayers.getItemAt(i);
+          if ((layerItem as any).url) {
+            const layerUrl = (layerItem as any).url;
             if (layerUrl.includes('proyecto') || layerUrl.includes('SIGI')) {
-              
-              // Extract base URL (everything before the last /)
               const lastSlashIndex = layerUrl.lastIndexOf('/');
               let baseUrl = layerUrl.substring(0, lastSlashIndex);
-              
-              // Ensure baseUrl ends with MapServer or FeatureServer
-              // If the URL doesn't have MapServer/FeatureServer, add MapServer
               if (!baseUrl.includes('MapServer') && !baseUrl.includes('FeatureServer')) {
-                // URL might be like: .../SIGI_PRD_2025/2
-                // We need: .../SIGI_PRD_2025/MapServer/5
-                // Add MapServer before the layer index
                 baseUrl = `${baseUrl}/MapServer`;
-                console.log('🔷 Added MapServer to base URL:', baseUrl);
               }
-              
+              // Based on testing: contratos=4, we'll try multiple indices for pep
               pepTableUrl = `${baseUrl}/5`;
-              console.log('🔷 Constructed PEP table URL from layer:', pepTableUrl);
+              contratosTableUrl = `${baseUrl}/4`; // Confirmed index 4 works
+              console.log('🔷 Constructed table URLs from layer URL');
+              console.log('🔷 Base URL:', baseUrl);
               break;
             }
           }
         }
       }
       
-      // Fallback to config if URL couldn't be constructed from layers
+      // Fallback to config if URLs couldn't be constructed
       if (!pepTableUrl && config.TablaElementosPEP) {
         pepTableUrl = config.TablaElementosPEP;
         console.log('🔷 Using PEP table URL from config:', pepTableUrl);
       }
 
+      // Query PEP table - try multiple indices if needed
       if (pepTableUrl) {
-        try {
-          console.log('🔷 Querying PEP table:', pepTableUrl);
-          console.log('🔷 For project:', attributes.COD_PROYEC);
+        const indicesToTry = [5, 1, 7, 8]; // Try different common indices for PEP table
+        
+        for (const index of indicesToTry) {
+          const currentPepUrl = pepTableUrl.replace(/\/\d+$/, `/${index}`);
+          try {
+            console.log(`🔷 Querying PEP table (index ${index}):`, currentPepUrl);
+            console.log('🔷 For project COD_PROYEC:', attributes.COD_PROYEC);
 
-          const pepQuery = new Query({
+            // Try with exact match first
+            let pepQuery = new Query({
+              where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
+              outFields: ['*'],
+              returnGeometry: false
+            });
+
+            let pepResult = await query.executeQueryJSON(currentPepUrl, pepQuery);
+            console.log(`🔷 PEP query result (index ${index}):`, pepResult);
+
+            if (pepResult.features && pepResult.features.length > 0) {
+              pepFeatures = pepResult.features;
+              console.log(`✅ Found PEP features at index ${index}:`, pepFeatures.length);
+              console.log('🔷 First PEP feature sample:', pepFeatures[0]?.attributes);
+              break; // Success! Stop trying other indices
+            } else {
+              // Try with trimmed value in case there are spaces
+              console.log(`🔷 No exact match, trying with TRIM at index ${index}...`);
+              pepQuery = new Query({
+                where: `TRIM(COD_PROYEC)='${attributes.COD_PROYEC.trim()}'`,
+                outFields: ['*'],
+                returnGeometry: false
+              });
+              
+              try {
+                pepResult = await query.executeQueryJSON(currentPepUrl, pepQuery);
+                if (pepResult.features && pepResult.features.length > 0) {
+                  pepFeatures = pepResult.features;
+                  console.log(`✅ Found PEP features with TRIM at index ${index}:`, pepFeatures.length);
+                  break;
+                }
+              } catch (trimError) {
+                console.log(`🔷 TRIM query failed at index ${index}, trying next...`);
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Error querying PEP table at index ${index}:`, error);
+            // Continue to next index
+          }
+        }
+        
+        if (pepFeatures.length === 0) {
+          console.error('❌ No PEP features found in any tried index');
+          console.log('💡 TIP: Check if the PEP table exists and has data for this project');
+        }
+      } else {
+        console.warn('⚠️ No PEP table URL available');
+      }
+
+      // Query Contratos table
+      if (contratosTableUrl) {
+        try {
+          console.log('🔷 Querying Contratos table:', contratosTableUrl);
+          
+          const contratosQuery = new Query({
             where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
             outFields: ['*'],
             returnGeometry: false
           });
 
-          const pepResult = await query.executeQueryJSON(pepTableUrl, pepQuery);
-          console.log('🔷 PEP query result:', pepResult);
+          const contratosResult = await query.executeQueryJSON(contratosTableUrl, contratosQuery);
+          console.log('🔷 Contratos query result:', contratosResult);
 
-          if (pepResult.features && pepResult.features.length > 0) {
-            pepFeatures = pepResult.features.map((f: any) => ({ attributes: f.attributes }));
-            console.log('🔷 Found PEP features:', pepFeatures.length);
+          if (contratosResult.features && contratosResult.features.length > 0) {
+            contratosFeatures = contratosResult.features;
+            console.log('🔷 Found Contratos features:', contratosFeatures.length);
+            console.log('🔷 First Contrato feature sample:', contratosFeatures[0]?.attributes);
           } else {
-            console.log('🔷 No PEP features found');
+            console.log('🔷 No Contratos features found');
           }
         } catch (error) {
-          console.error('❌ Error querying PEP table:', error);
+          console.warn('⚠️ Error querying Contratos table:', error);
+          // Try alternative index if first one fails
+          const alternativeUrl = contratosTableUrl.replace('/3', '/4');
+          if (alternativeUrl !== contratosTableUrl) {
+            try {
+              console.log('🔷 Trying alternative Contratos table URL:', alternativeUrl);
+              const contratosQuery = new Query({
+                where: `COD_PROYEC='${attributes.COD_PROYEC}'`,
+                outFields: ['*'],
+                returnGeometry: false
+              });
+              const contratosResult = await query.executeQueryJSON(alternativeUrl, contratosQuery);
+              if (contratosResult.features && contratosResult.features.length > 0) {
+                contratosFeatures = contratosResult.features;
+                console.log('🔷 Found Contratos features at alternative index:', contratosFeatures.length);
+              }
+            } catch (altError) {
+              console.warn('⚠️ Alternative Contratos query also failed:', altError);
+            }
+          }
         }
-      } else {
-        console.warn('⚠️ No PEP table URL available (neither from map layers nor from config)');
       }
 
-      // For contracts, use the PEP features we already have
-      // They already contain contract information
-      const mergedContracts = pepFeatures.map(f => f.attributes);
+      // Merge PEP features with Contratos features (like the original app does)
+      console.log('🔷 Merging PEP and Contratos features...');
+      console.log('🔷 PEP features count:', pepFeatures.length);
+      console.log('🔷 Contratos features count:', contratosFeatures.length);
+      
+      let mergedContracts: any[] = [];
+      
+      if (pepFeatures.length > 0) {
+        // If we have PEP features, use them as base and merge with Contratos
+        mergedContracts = pepFeatures.map((pepFeature: any) => {
+          const pepAttrs = pepFeature.attributes || pepFeature;
+          
+          // Try to find matching contract by NUMERO_CONTRATO or NUM_CONTRATO fields
+          const contratoFeature = contratosFeatures.find((contrato: any) => {
+            const contratoAttrs = contrato.attributes || contrato;
+            // Try both possible field names for contract number
+            return contratoAttrs.NUM_CONTRATO === pepAttrs.NUMERO_CONTRATO || 
+                   contratoAttrs.NUMERO_CONTRATO === pepAttrs.NUMERO_CONTRATO ||
+                   contratoAttrs.NUM_CONTRATO === pepAttrs.NUM_CONTRATO;
+          });
+
+          if (contratoFeature) {
+            const contratoAttrs = contratoFeature.attributes || contratoFeature;
+            console.log('🔷 Merging contract:', pepAttrs.NUMERO_CONTRATO, 'with contract table data');
+            // Use contract data if available (contract table has more complete data)
+            return {
+              ...pepAttrs,
+              OBJETO_CONT: contratoAttrs.OBJETO_CONTRATO || contratoAttrs.OBJETO_CONT || pepAttrs.OBJETO_CONTRATO || pepAttrs.OBJETO_CONT,
+              FECHA_FIN_CONT: contratoAttrs.FECHA_FIN_CONT || contratoAttrs.FECHA_FIN || pepAttrs.FECHA_FIN,
+              FECHA_INI_CONT: contratoAttrs.FECHA_INI_CONT || contratoAttrs.FECHA_INICIO || pepAttrs.FECHA_INICIO,
+              FECHA_LIQ_CONT: contratoAttrs.FECHA_LIQ_CONT || contratoAttrs.FECHA_LIQ || pepAttrs.FECHA_LIQ,
+              FECHA_POS_FIN_CONT: contratoAttrs.FECHA_POS_FIN_CONT || contratoAttrs.FECHA_POS_FIN || pepAttrs.FECHA_POS_FIN
+            };
+          } else {
+            console.log('🔷 Using PEP data only for contract:', pepAttrs.NUMERO_CONTRATO);
+            // Fallback to PEP data only
+            return {
+              ...pepAttrs,
+              OBJETO_CONT: pepAttrs.OBJETO_CONTRATO || pepAttrs.OBJETO_CONT,
+              FECHA_FIN_CONT: pepAttrs.FECHA_FIN,
+              FECHA_INI_CONT: pepAttrs.FECHA_INICIO,
+              FECHA_LIQ_CONT: pepAttrs.FECHA_LIQ,
+              FECHA_POS_FIN_CONT: pepAttrs.FECHA_POS_FIN
+            };
+          }
+        });
+      } else if (contratosFeatures.length > 0) {
+        // If no PEP features but we have Contratos, use Contratos directly
+        console.log('💡 No PEP features found, using Contratos data directly');
+        mergedContracts = contratosFeatures.map((contratoFeature: any) => {
+          const contratoAttrs = contratoFeature.attributes || contratoFeature;
+          return {
+            ...contratoAttrs,
+            // Map contract fields to expected field names
+            NUMERO_CONTRATO: contratoAttrs.NUM_CONTRATO || contratoAttrs.NUMERO_CONTRATO,
+            OBJETO_CONT: contratoAttrs.OBJETO_CONTRATO || contratoAttrs.OBJETO_CONT,
+            FECHA_INI_CONT: contratoAttrs.FECHA_INI_CONT || contratoAttrs.FECHA_INICIO,
+            FECHA_FIN_CONT: contratoAttrs.FECHA_FIN_CONT || contratoAttrs.FECHA_FIN,
+            FECHA_LIQ_CONT: contratoAttrs.FECHA_LIQ_CONT || contratoAttrs.FECHA_LIQ,
+            FECHA_POS_FIN_CONT: contratoAttrs.FECHA_POS_FIN_CONT || contratoAttrs.FECHA_POS_FIN
+          };
+        });
+      } else {
+        console.log('⚠️ No PEP or Contratos features found');
+      }
+
+      console.log('🔷 Total merged contracts:', mergedContracts.length);
+      if (mergedContracts.length > 0) {
+        console.log('🔷 First merged contract sample:', mergedContracts[0]);
+        console.log('🔷 Sample contract fields:');
+        console.log('  - NUMERO_CONTRATO:', mergedContracts[0].NUMERO_CONTRATO);
+        console.log('  - OBJETO_CONT:', mergedContracts[0].OBJETO_CONT);
+        console.log('  - FECHA_INI_CONT:', mergedContracts[0].FECHA_INI_CONT);
+        console.log('  - AVANCE_FISICO:', mergedContracts[0].AVANCE_FISICO);
+        console.log('  - FASE_PEP:', mergedContracts[0].FASE_PEP);
+      }
 
       // Query population data from table
       let populationData: any[] = [];
       
       // Build population table URL from map layer or config
       let populationTableUrl = '';
-      if (this.state.jimuMapView && pepTableUrl) {
-        // If we got PEP URL successfully, try to construct population table URL
-        // Assuming population table is at index 6 or 7 (adjust if needed)
-        const baseUrl = pepTableUrl.substring(0, pepTableUrl.lastIndexOf('/'));
-        // Try index 6 first (common pattern: projects=2, pep=5, population=6)
-        populationTableUrl = `${baseUrl}/6`;
-        console.log('🔷 Constructed population table URL:', populationTableUrl);
+      if (this.state.jimuMapView) {
+        const allLayers = this.state.jimuMapView.view.map.allLayers;
+        for (let i = 0; i < allLayers.length; i++) {
+          const layer = allLayers.getItemAt(i);
+          if ((layer as any).url) {
+            const layerUrl = (layer as any).url;
+            if (layerUrl.includes('proyecto') || layerUrl.includes('SIGI')) {
+              const lastSlashIndex = layerUrl.lastIndexOf('/');
+              let baseUrl = layerUrl.substring(0, lastSlashIndex);
+              if (!baseUrl.includes('MapServer') && !baseUrl.includes('FeatureServer')) {
+                baseUrl = `${baseUrl}/MapServer`;
+              }
+              // Try index 6 first (common pattern: projects=2, pep=5, population=6)
+              populationTableUrl = `${baseUrl}/6`;
+              console.log('🔷 Constructed population table URL:', populationTableUrl);
+              break;
+            }
+          }
+        }
       }
       
       // Fallback to config if URL couldn't be constructed
